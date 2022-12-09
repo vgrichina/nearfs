@@ -1,0 +1,61 @@
+{
+  "name": "@ronomon/crypto-async",
+  "version": "5.0.1",
+  "description": "Fast, reliable cipher, hash and hmac methods executed in Node's threadpool for multi-core throughput.",
+  "main": "index.js",
+  "files": [
+    "benchmark.js",
+    "binding.c",
+    "binding.gyp",
+    "common.js",
+    "index.js",
+    "test.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ronomon/crypto-async.git"
+  },
+  "keywords": [
+    "aes",
+    "aead",
+    "async",
+    "asynchronous",
+    "blake",
+    "chacha20-poly1305",
+    "cipher",
+    "cipheriv",
+    "crypto",
+    "ctr",
+    "decipher",
+    "decipheriv",
+    "event loop",
+    "gcm",
+    "hash",
+    "hmac",
+    "non-blocking",
+    "sha256",
+    "sha512",
+    "thread",
+    "threadpool",
+    "throughput",
+    "worker",
+    "zero-copy"
+  ],
+  "author": "Joran Dirk Greef",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ronomon/crypto-async/issues"
+  },
+  "homepage": "https://github.com/ronomon/crypto-async#readme",
+  "scripts": {
+    "postinstall": "node-gyp clean",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@ronomon/queue": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "engineStrict": true
+}
