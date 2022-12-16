@@ -39,8 +39,8 @@ function parseRustEnum(enumObj) {
     }
 }
 
-// TODO: Pass as argument
-const STORAGE_PATH = './storage';
+// TODO: Refactor into common module?
+const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
 
 const fs = require('fs/promises');
 async function writeToStorage(hash, data) {
