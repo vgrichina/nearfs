@@ -1,0 +1,1 @@
+node scripts/load-from-near-lake --start-block-height 107923021 --bucket-name near-lake-data-testnet

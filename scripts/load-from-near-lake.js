@@ -40,20 +40,21 @@ function parseRustEnum(enumObj) {
 }
 
 // TODO: Pass as argument
-const storagePath = './storage';
+const STORAGE_PATH = './storage';
 
+const fs = require('fs/promises');
 async function writeToStorage(hash, data) {
-    const storagePath = `${storagePath}/${hash.toString('hex')}`;
+    const storagePath = `${STORAGE_PATH}/${hash.toString('hex')}`;
     // check if file exists
-    const stat = await fs.stat(storagePath);
-    if (stat.isFile()) {
+    const stat = await fs.stat(storagePath).catch(() => false);
+    if (stat && stat.isFile()) {
         // file exists, check if size matches
         if (stat.size === data.length) {
             // already written
             return;
         }
     }
-    await fs.promises.writeFile(storagePath, data);
+    await fs.writeFile(storagePath, data);
 }
 
 // TODO: Should be possible to parse from transactions directly when listening to network?
@@ -77,14 +78,19 @@ async function dumpBlockReceipts(streamerMessage, { include, exclude }) {
                 for (let action of receipt.Action.actions) {
                     const [, actionArgs] = parseRustEnum(action);
 
-                    if (method_name === 'fs_store') {
+                    if (actionArgs.methodName === 'fs_store') {
                         const data = Buffer.from(actionArgs.args, 'base64');
                         const cryptoAsync = require('@ronomon/crypto-async');
                         const hash = await new Promise((resolve, reject) => {
                             cryptoAsync.hash('sha256', data, (error, hash) => error ? reject(error) : resolve(hash));
                         });
 
-                        await writeToStorage(hash, data);
+                        try {
+                            await writeToStorage(hash, data);
+                        } catch (e) {
+                            console.log('Error writing to storage', e);
+                            process.exit(1);
+                        }
                     }
                 }
             }
@@ -141,21 +147,21 @@ if (require.main === module) {
                     exclude,
                 } = argv;
 
+                const { fromEnv } = require("@aws-sdk/credential-providers");
                 let blocksProcessed = 0;
-
                 for await (let streamerMessage of stream({
+                    credentials: fromEnv(),
                     startBlockHeight: startBlockHeight || 0, // TODO: Save/read from storage
                     s3BucketName: bucketName || "near-lake-data-mainnet",
                     s3RegionName: regionName || "eu-central-1",
                     s3Endpoint: endpoint,
                     blocksPreloadPoolSize: batchSize
                 })) {
-                    await withTimeCounter('handleStreamerMessage', async () => {
-                        await handleStreamerMessage(streamerMessage, {
-                            batchSize,
-                            include,
-                            exclude,
-                        });
+                    console.log('started');
+                    await handleStreamerMessage(streamerMessage, {
+                        batchSize,
+                        include,
+                        exclude,
                     });
 
                     blocksProcessed++;

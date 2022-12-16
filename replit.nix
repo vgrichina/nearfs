@@ -1,5 +1,6 @@
 { pkgs }: {
 	deps = [
+        pkgs.unixtools.xxd
         pkgs.python3
 		pkgs.nodejs-16_x
         pkgs.nodePackages.typescript-language-server

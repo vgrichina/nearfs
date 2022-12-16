@@ -10,12 +10,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/credential-providers": "^3.231.0",
     "@ronomon/crypto-async": "^5.0.1",
     "@types/node": "^18.0.6",
     "meow": "^9.0.0",
     "minimatch": "^5.1.1",
     "near-api-js": "^1.1.0",
-    "near-lake-framework": "^1.0.5",
+    "near-lake-framework": "github:vgrichina/near-lake-framework-js#credentials",
     "node-fetch": "^3.2.6",
     "yargs": "^17.6.2"
   }
