@@ -8,12 +8,31 @@ const fs = require('fs/promises');
 const multibase = require('multibase');
 const assert = require('assert');
 
+const { readPBNode, cidToString } = require('fast-ipfs');
+
 // TODO: Refactor into common module?
 const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
 
+const fileExists = async (file) => {
+    const stat = await fs.stat(file).catch(() => false);
+    return stat && stat.isFile();
+};
+
 const serveFile = async ctx => {
-    // TODO: Cache?
-    const cidStr = ctx.params.cid;
+    const fileData = await getFile(ctx.params.cid, ctx.params.path);
+    if (fileData) {
+        // TODO: Detect content-type?
+        ctx.body = fileData;
+        return;
+    }
+
+    ctx.status = 404;
+    ctx.body = 'Not found';
+}
+
+const getFile = async (cidStr, path) => {
+    console.log('getFile', cidStr, path);
+    // TODO: Cache ?
     const cid = Buffer.from(multibase.decode(cidStr));
 
     const cidVersion = cid[0];
@@ -26,26 +45,29 @@ const serveFile = async ctx => {
     assert(hashSize === 32, 'Wrong SHA-256 hash size');
     const hash = cid.subarray(4, 4 + hashSize);
 
+    const file = `${STORAGE_PATH}/${hash.toString('hex')}`;
+
     if (codec === 0x55) {
-        const file = `${STORAGE_PATH}/${hash.toString('hex')}`;
+        assert(!path, 'CID points to a file');
 
-        assert(ctx.params.path === undefined, 'CID points to a file');
-
-        const stat = await fs.stat(file).catch(() => false);
-        if (stat && stat.isFile()) {
-            // TODO: Detect content-type?
-            ctx.body = await fs.readFile(file);
-            return;
+        if (await fileExists(file)) {
+            const blockData = await fs.readFile(file);
+            return blockData;
         }
     } else if (codec === 0x70) {
-        assert(false, 'Unsupported codec');
+        assert(!!path, 'CID points to a directory, path is required');
+        // TODO: List directories?
+
+        const blockData = await fs.readFile(file);
+        const node = readPBNode(blockData);
+        const pathParts = path.split('/');
+        const link = node.links.find(link => link.name === pathParts[0]);
+
+        return await getFile(cidToString(link.cid), pathParts.slice(1).join('/'));
     } else {
         // TODO: Use params.path and follow IPFS stuff
         throw new Error(`Unsupported codec: 0x${codec.toString(16)}`);
     }
-
-    ctx.status = 404;
-    ctx.body = 'Not found';
 };
 
 router.get('/', async ctx => {
