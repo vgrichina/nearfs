@@ -19,6 +19,7 @@
     "koa": "^2.14.1",
     "koa-router": "^12.0.0",
     "meow": "^9.0.0",
+    "mime-types": "^2.1.35",
     "minimatch": "^5.1.1",
     "multibase": "^4.0.6",
     "near-api-js": "^1.1.0",

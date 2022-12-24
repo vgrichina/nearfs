@@ -7,6 +7,7 @@ const cors = require('@koa/cors');
 const fs = require('fs/promises');
 const multibase = require('multibase');
 const assert = require('assert');
+const mime = require('mime-types');
 
 const { readPBNode, cidToString } = require('fast-ipfs');
 
@@ -21,7 +22,9 @@ const fileExists = async (file) => {
 const serveFile = async ctx => {
     const fileData = await getFile(ctx.params.cid, ctx.params.path);
     if (fileData) {
-        // TODO: Detect content-type?
+        if (ctx.params.path.includes('.')) {
+            ctx.type = mime.lookup(ctx.params.path);
+        }
         ctx.body = fileData;
         return;
     }
@@ -65,7 +68,6 @@ const getFile = async (cidStr, path) => {
 
         return await getFile(cidToString(link.cid), pathParts.slice(1).join('/'));
     } else {
-        // TODO: Use params.path and follow IPFS stuff
         throw new Error(`Unsupported codec: 0x${codec.toString(16)}`);
     }
 };
