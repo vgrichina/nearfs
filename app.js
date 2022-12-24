@@ -9,7 +9,7 @@ const multibase = require('multibase');
 const assert = require('assert');
 const mime = require('mime-types');
 
-const { readPBNode, cidToString } = require('fast-ipfs');
+const { readPBNode, cidToString, readCID } = require('fast-ipfs');
 
 // TODO: Refactor into common module?
 const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
@@ -20,7 +20,8 @@ const fileExists = async (file) => {
 };
 
 const serveFile = async ctx => {
-    const fileData = await getFile(ctx.params.cid, ctx.params.path);
+    const cid = Buffer.from(multibase.decode(ctx.params.cid));
+    const fileData = await getFile(cid, ctx.params.path);
     if (fileData) {
         if (ctx.params.path?.includes('.')) {
             ctx.type = mime.lookup(ctx.params.path);
@@ -33,20 +34,10 @@ const serveFile = async ctx => {
     ctx.body = 'Not found';
 }
 
-const getFile = async (cidStr, path) => {
-    console.log('getFile', cidStr, path);
+const getFile = async (cid, path) => {
+    console.log('getFile', cidToString(cid), path);
     // TODO: Cache ?
-    const cid = Buffer.from(multibase.decode(cidStr));
-
-    const cidVersion = cid[0];
-    assert(cidVersion === 1, 'Only CID version 1 is supported');
-
-    const codec = cid[1];
-    const hashType = cid[2];
-    assert(hashType === 0x12, 'Only SHA-256 is supported');
-    const hashSize = cid[3];
-    assert(hashSize === 32, 'Wrong SHA-256 hash size');
-    const hash = cid.subarray(4, 4 + hashSize);
+    const { codec, hash } = readCID(cid);
 
     const file = `${STORAGE_PATH}/${hash.toString('hex')}`;
 
@@ -66,7 +57,7 @@ const getFile = async (cidStr, path) => {
         const pathParts = path.split('/');
         const link = node.links.find(link => link.name === pathParts[0]);
 
-        return await getFile(cidToString(link.cid), pathParts.slice(1).join('/'));
+        return await getFile(link.cid, pathParts.slice(1).join('/'));
     } else {
         throw new Error(`Unsupported codec: 0x${codec.toString(16)}`);
     }
