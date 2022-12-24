@@ -22,6 +22,7 @@
     "meow": "^9.0.0",
     "mime-types": "^2.1.35",
     "minimatch": "^5.1.1",
+    "mmmagic": "^0.5.3",
     "multibase": "^4.0.6",
     "near-api-js": "^1.1.0",
     "near-lake-framework": "^1.0.6",

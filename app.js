@@ -8,8 +8,11 @@ const fs = require('fs/promises');
 const multibase = require('multibase');
 const assert = require('assert');
 const mime = require('mime-types');
+const { Magic, MAGIC_MIME } = require('mmmagic');
 
 const { readPBNode, cidToString, readCID } = require('fast-ipfs');
+
+const magic = new Magic(MAGIC_MIME);
 
 // TODO: Refactor into common module?
 const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
@@ -25,7 +28,11 @@ const serveFile = async ctx => {
     if (fileData) {
         if (ctx.params.path?.includes('.')) {
             ctx.type = mime.lookup(ctx.params.path);
+        } else {
+            const detected = await new Promise((resolve, reject) => magic.detect(fileData, (err, result) => err ? reject(err) : resolve(result)));
+            ctx.type = detected;
         }
+
         ctx.body = fileData;
         return;
     }
