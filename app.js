@@ -49,15 +49,22 @@ const getFile = async (cid, path) => {
             return blockData;
         }
     } else if (codec === 0x70) {
-        assert(!!path, 'CID points to a directory, path is required');
-        // TODO: List directories?
-
         const blockData = await fs.readFile(file);
         const node = readPBNode(blockData);
-        const pathParts = path.split('/');
-        const link = node.links.find(link => link.name === pathParts[0]);
 
-        return await getFile(link.cid, pathParts.slice(1).join('/'));
+        if (path) {
+            const pathParts = path.split('/');
+            const link = node.links.find(link => link.name === pathParts[0]);
+
+            return await getFile(link.cid, pathParts.slice(1).join('/'));
+        }
+
+        const link = node.links.find(link => link.name === 'index.html');
+
+        assert(!!link, 'CID points to a directory without index.html, path is required');
+        // TODO: List directories?
+
+        return await getFile(link.cid);
     } else {
         throw new Error(`Unsupported codec: 0x${codec.toString(16)}`);
     }
