@@ -22,7 +22,7 @@ const fileExists = async (file) => {
 const serveFile = async ctx => {
     const fileData = await getFile(ctx.params.cid, ctx.params.path);
     if (fileData) {
-        if (ctx.params.path.includes('.')) {
+        if (ctx.params.path?.includes('.')) {
             ctx.type = mime.lookup(ctx.params.path);
         }
         ctx.body = fileData;
