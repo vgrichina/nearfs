@@ -1,6 +1,11 @@
 const { stream } = require('near-lake-framework');
 const minimatch = require('minimatch');
 
+// TODO: Refactor into common module?
+const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
+
+const fs = require('fs/promises');
+
 let totalMessages = 0;
 let timeStarted = Date.now();
 
@@ -24,6 +29,8 @@ async function handleStreamerMessage(streamerMessage, options = {}) {
     for (let fn of pipeline) {
         await fn(streamerMessage, options);
     }
+
+    await fs.writeFile(`${STORAGE_PATH}/latest_block_height`, blockHeight.toString());
 }
 
 function parseRustEnum(enumObj) {
@@ -39,10 +46,6 @@ function parseRustEnum(enumObj) {
     }
 }
 
-// TODO: Refactor into common module?
-const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
-
-const fs = require('fs/promises');
 async function writeToStorage(hash, data) {
     const storagePath = `${STORAGE_PATH}/${hash.toString('hex')}`;
     // check if file exists
@@ -63,7 +66,6 @@ async function dumpBlockReceipts(streamerMessage, { include, exclude }) {
     for (let shard of streamerMessage.shards) {
         let { chunk } = shard;
         if (!chunk) {
-            console.log('rekt block', streamerMessage);
             continue;
         }
         for (let { predecessorId, receipt, receiptId, receiverId } of chunk.receipts) {
@@ -147,11 +149,13 @@ if (require.main === module) {
                     exclude,
                 } = argv;
 
+                const latestBlockHeight = (await fs.readFile( `${STORAGE_PATH}/latest_block_height`).catch(() => '')).toString('utf8');
+
                 const { fromEnv } = require("@aws-sdk/credential-providers");
                 let blocksProcessed = 0;
                 for await (let streamerMessage of stream({
                     credentials: fromEnv(),
-                    startBlockHeight: startBlockHeight || 0, // TODO: Save/read from storage
+                    startBlockHeight: startBlockHeight || latestBlockHeight,
                     s3BucketName: bucketName || "near-lake-data-mainnet",
                     s3RegionName: regionName || "eu-central-1",
                     s3Endpoint: endpoint,
