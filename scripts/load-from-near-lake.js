@@ -100,8 +100,46 @@ async function dumpBlockReceipts(streamerMessage, { include, exclude }) {
     }
 }
 
+async function loadStream(options) {
+    const {
+        startBlockHeight,
+        bucketName,
+        regionName,
+        endpoint,
+        batchSize,
+        limit,
+        include,
+        exclude,
+    } = options;
+
+    const latestBlockHeight = (await fs.readFile(`${STORAGE_PATH}/latest_block_height`).catch(() => '')).toString('utf8');
+
+    const { fromEnv } = require("@aws-sdk/credential-providers");
+    let blocksProcessed = 0;
+    for await (let streamerMessage of stream({
+        credentials: fromEnv(),
+        startBlockHeight: startBlockHeight || latestBlockHeight,
+        s3BucketName: bucketName || "near-lake-data-mainnet",
+        s3RegionName: regionName || "eu-central-1",
+        s3Endpoint: endpoint,
+        blocksPreloadPoolSize: batchSize
+    })) {
+        await handleStreamerMessage(streamerMessage, {
+            batchSize,
+            include,
+            exclude,
+        });
+
+        blocksProcessed++;
+        if (limit && blocksProcessed >= limit) {
+            break;
+        }
+    }
+}
+
 module.exports = {
     handleStreamerMessage,
+    loadStream,
 }
 
 if (require.main === module) {
@@ -136,44 +174,6 @@ if (require.main === module) {
                     describe: 'How many blocks to fetch before stopping. Unlimited by default.',
                     number: true
                 }),
-            async argv => {
-
-                const {
-                    startBlockHeight,
-                    bucketName,
-                    regionName,
-                    endpoint,
-                    batchSize,
-                    limit,
-                    include,
-                    exclude,
-                } = argv;
-
-                const latestBlockHeight = (await fs.readFile( `${STORAGE_PATH}/latest_block_height`).catch(() => '')).toString('utf8');
-
-                const { fromEnv } = require("@aws-sdk/credential-providers");
-                let blocksProcessed = 0;
-                for await (let streamerMessage of stream({
-                    credentials: fromEnv(),
-                    startBlockHeight: startBlockHeight || latestBlockHeight,
-                    s3BucketName: bucketName || "near-lake-data-mainnet",
-                    s3RegionName: regionName || "eu-central-1",
-                    s3Endpoint: endpoint,
-                    blocksPreloadPoolSize: batchSize
-                })) {
-                    console.log('started');
-                    await handleStreamerMessage(streamerMessage, {
-                        batchSize,
-                        include,
-                        exclude,
-                    });
-
-                    blocksProcessed++;
-                    if (limit && blocksProcessed >= limit) {
-                        break;
-                    }
-                }
-
-            })
+            loadStream)
         .parse();
 }
