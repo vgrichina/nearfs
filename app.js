@@ -100,4 +100,26 @@ if (require.main === module) {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT);
     console.log('Listening on http://localhost:%d/', PORT);
+
+    if (['yes', 'true'].includes((process.env.NEARFS_LOAD_NEAR_LAKE || '').toLowerCase())) {
+        const { loadStream } = require('./scripts/load-from-near-lake');
+        const fs = require('fs');
+
+        const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
+        const startHeightPath = `${STORAGE_PATH}/latest_block_height`;
+        const startBlockHeight = (fs.statSync(startHeightPath, { throwIfNoEntry: false }) && parseInt(fs.readFileSync(startHeightPath, { encoding: 'utf8' })))
+            || process.env.NEARFS_DEFAULT_START_BLOCK_HEIGHT || 0;
+        loadStream({
+            startBlockHeight,
+            bucketName: process.env.NEARFS_LAKE_BUCKET_NAME,
+            regionName: process.env.NEARFS_LAKE_REGION_NAME,
+            endpoint: process.env.NEARFS_LAKE_ENDPOINT,
+            batchSize: process.env.NEARFS_LAKE_BATCH_SIZE,
+            incude: process.env.NEARFS_LAKE_INCLUDE,
+            exclude: process.env.NEARFS_LAKE_EXCLUDE,
+        }).catch(err => {
+            console.error(err)
+            process.exit(1);
+        });
+    }
 }
