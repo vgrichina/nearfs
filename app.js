@@ -9,6 +9,7 @@ const multibase = require('multibase');
 const assert = require('assert');
 const mime = require('mime-types');
 const { Magic, MAGIC_MIME } = require('mmmagic');
+const isHtml = require('is-html');
 
 const { readPBNode, cidToString, readCID } = require('fast-ipfs');
 
@@ -28,6 +29,9 @@ const serveFile = async ctx => {
     if (fileData) {
         if (ctx.params.path?.includes('.')) {
             ctx.type = mime.lookup(ctx.params.path);
+        } else if (isHtml(fileData.toString('utf8'))) {
+            // TODO: Check if this check is fast enough
+            ctx.type = 'text/html';
         } else {
             const detected = await new Promise((resolve, reject) => magic.detect(fileData, (err, result) => err ? reject(err) : resolve(result)));
             ctx.type = detected;

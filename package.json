@@ -17,6 +17,7 @@
     "@types/node": "^18.0.6",
     "fast-ipfs": "^0.0.1",
     "fs": "^0.0.1-security",
+    "is-html": "^2.0.0",
     "koa": "^2.14.1",
     "koa-router": "^12.0.0",
     "meow": "^9.0.0",
