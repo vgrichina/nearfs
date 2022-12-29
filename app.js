@@ -37,6 +37,12 @@ const serveFile = async ctx => {
             ctx.type = detected;
         }
 
+        // Set cache control header to indicate that resource never expires
+        ctx.set('Cache-Control', 'public, max-age=29030400, immutable');
+
+        // Return CID-based Etag like IPFS gateways
+        ctx.set('Etag', `W/"${cidToString(cid)}"`);
+
         ctx.body = fileData;
         return;
     }
