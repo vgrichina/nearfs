@@ -28,6 +28,7 @@
     "near-api-js": "^1.1.0",
     "near-lake-framework": "^1.0.6",
     "node-fetch": "^3.2.6",
+    "write-file-atomic": "^5.0.0",
     "yargs": "^17.6.2"
   }
 }

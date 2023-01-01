@@ -30,7 +30,8 @@ async function handleStreamerMessage(streamerMessage, options = {}) {
         await fn(streamerMessage, options);
     }
 
-    await fs.writeFile(`${STORAGE_PATH}/latest_block_height`, blockHeight.toString());
+    const writeFileAtomic = require('write-file-atomic');
+    await writeFileAtomic(`${STORAGE_PATH}/latest_block_height`, blockHeight.toString());
 }
 
 function parseRustEnum(enumObj) {
