@@ -1,16 +1,11 @@
 const { stream } = require('near-lake-framework');
 const minimatch = require('minimatch');
 
-// TODO: Refactor into common module?
-const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
-
-const fs = require('fs/promises');
+const storage = require('../src/storage');
 
 let totalMessages = 0;
 let timeStarted = Date.now();
 
-const NUM_RETRIES = 10;
-const RETRY_TIMEOUT = 5000;
 async function handleStreamerMessage(streamerMessage, options = {}) {
     const { height: blockHeight, timestamp } = streamerMessage.block.header;
     totalMessages++;
@@ -30,8 +25,7 @@ async function handleStreamerMessage(streamerMessage, options = {}) {
         await fn(streamerMessage, options);
     }
 
-    const writeFileAtomic = require('write-file-atomic');
-    await writeFileAtomic(`${STORAGE_PATH}/latest_block_height`, blockHeight.toString());
+    await storage.writeLatestBlockHeight(blockHeight);
 }
 
 function parseRustEnum(enumObj) {
@@ -45,20 +39,6 @@ function parseRustEnum(enumObj) {
         }
         return [actionKeys[0], enumObj[actionKeys[0]]];
     }
-}
-
-async function writeToStorage(hash, data) {
-    const storagePath = `${STORAGE_PATH}/${hash.toString('hex')}`;
-    // check if file exists
-    const stat = await fs.stat(storagePath).catch(() => false);
-    if (stat && stat.isFile()) {
-        // file exists, check if size matches
-        if (stat.size === data.length) {
-            // already written
-            return;
-        }
-    }
-    await fs.writeFile(storagePath, data);
 }
 
 // TODO: Should be possible to parse from transactions directly when listening to network?
@@ -83,13 +63,8 @@ async function dumpBlockReceipts(streamerMessage, { include, exclude }) {
 
                     if (actionArgs.methodName === 'fs_store') {
                         const data = Buffer.from(actionArgs.args, 'base64');
-                        const cryptoAsync = require('@ronomon/crypto-async');
-                        const hash = await new Promise((resolve, reject) => {
-                            cryptoAsync.hash('sha256', data, (error, hash) => error ? reject(error) : resolve(hash));
-                        });
-
                         try {
-                            await writeToStorage(hash, data);
+                            await storage.hashAndWriteBlock(data);
                         } catch (e) {
                             console.log('Error writing to storage', e);
                             process.exit(1);
@@ -113,7 +88,7 @@ async function loadStream(options) {
         exclude,
     } = options;
 
-    const latestBlockHeight = (await fs.readFile(`${STORAGE_PATH}/latest_block_height`).catch(() => '')).toString('utf8');
+    const latestBlockHeight = await storage.readLatestBlockHeight();
 
     const { fromEnv } = require("@aws-sdk/credential-providers");
     let blocksProcessed = 0;
