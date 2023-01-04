@@ -58,12 +58,13 @@ const serveFile = async ctx => {
         ctx.body = `
             <html>
                 <body>
-                    <h1>Index of /ipfs/${cidToString(cid)}/${path}</h1>
+                    <h1>Index of /ipfs/${cidToString(cid)}/${path || ''}</h1>
                     <ul>${node.links.map(link => `<li><a href="${`/ipfs/${cidToString(link.cid)}`}">${link.name}</a></li>`).join('\n')}
                     </ul>
                 </body>
             </html>
         `;
+        return;
     }
 
     ctx.status = 404;
