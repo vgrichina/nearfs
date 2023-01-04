@@ -29,6 +29,8 @@ NEARFS is a distributed file system compatible with IPFS that uses the NEAR bloc
 - `NEARFS_LAKE_BATCH_SIZE` - number of blocks to load from NEAR Lake in one batch
 - `NEARFS_LAKE_INCLUDE` - comma-separated list of account glob patterns to include when loading blocks from NEAR Lake
 - `NEARFS_LAKE_EXCLUDE` - comma-separated list of account glob patterns to exclude when loading blocks from NEAR Lake
+- `AWS_ACCESS_KEY_ID` - AWS access key ID to use when loading blocks from NEAR Lake
+- `AWS_SECRET_ACCESS_KEY` - AWS secret access key to use when loading blocks from NEAR Lake
 
 
 
