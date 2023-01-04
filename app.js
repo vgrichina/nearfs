@@ -4,7 +4,6 @@ const Router = require('koa-router');
 const router = new Router();
 const cors = require('@koa/cors');
 
-const fs = require('fs/promises');
 const multibase = require('multibase');
 const assert = require('assert');
 const mime = require('mime-types');
@@ -12,16 +11,9 @@ const { Magic, MAGIC_MIME } = require('mmmagic');
 const isHtml = require('is-html');
 
 const { readPBNode, cidToString, readCID } = require('fast-ipfs');
+const storage = require('./src/storage');
 
 const magic = new Magic(MAGIC_MIME);
-
-// TODO: Refactor into common module?
-const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
-
-const fileExists = async (file) => {
-    const stat = await fs.stat(file).catch(() => false);
-    return stat && stat.isFile();
-};
 
 const serveFile = async ctx => {
     const rootCid = Buffer.from(multibase.decode(ctx.params.cid));
@@ -71,20 +63,12 @@ const serveFile = async ctx => {
     ctx.body = 'Not found';
 }
 
-const readBlock = async (hash) => {
-    const file = `${STORAGE_PATH}/${hash.toString('hex')}`;
-
-    if (await fileExists(file)) {
-        return await fs.readFile(file);
-    }
-}
-
 const getFile = async (cid, path) => {
     console.log('getFile', cidToString(cid), path);
     // TODO: Cache ?
     const { codec, hash } = readCID(cid);
 
-    const blockData = await readBlock(hash);
+    const blockData = await storage.readBlock(hash);
     if (!blockData) {
         // File not found
         return {};
@@ -94,7 +78,7 @@ const getFile = async (cid, path) => {
         assert(!path, 'CID points to a file');
         return { fileData: blockData, cid, codec };
     } else if (codec === 0x70) {
-        const blockData = await readBlock(hash);
+        const blockData = await storage.readBlock(hash);
         const node = readPBNode(blockData);
 
         if (path) {
@@ -148,20 +132,18 @@ if (require.main === module) {
 
     if (['yes', 'true'].includes((process.env.NEARFS_LOAD_NEAR_LAKE || '').toLowerCase())) {
         const { loadStream } = require('./scripts/load-from-near-lake');
-        const fs = require('fs');
 
-        const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
-        const startHeightPath = `${STORAGE_PATH}/latest_block_height`;
-        const startBlockHeight = (fs.statSync(startHeightPath, { throwIfNoEntry: false }) && parseInt(fs.readFileSync(startHeightPath, { encoding: 'utf8' })))
-            || process.env.NEARFS_DEFAULT_START_BLOCK_HEIGHT || 0;
-        loadStream({
-            startBlockHeight,
-            bucketName: process.env.NEARFS_LAKE_BUCKET_NAME,
-            regionName: process.env.NEARFS_LAKE_REGION_NAME,
-            endpoint: process.env.NEARFS_LAKE_ENDPOINT,
-            batchSize: process.env.NEARFS_LAKE_BATCH_SIZE,
-            incude: process.env.NEARFS_LAKE_INCLUDE,
-            exclude: process.env.NEARFS_LAKE_EXCLUDE,
+        (async () => {
+            const startBlockHeight = await storage.readLatestBlockHeight() || process.env.NEARFS_DEFAULT_START_BLOCK_HEIGHT || 0;
+            await loadStream({
+                startBlockHeight,
+                bucketName: process.env.NEARFS_LAKE_BUCKET_NAME,
+                regionName: process.env.NEARFS_LAKE_REGION_NAME,
+                endpoint: process.env.NEARFS_LAKE_ENDPOINT,
+                batchSize: process.env.NEARFS_LAKE_BATCH_SIZE,
+                incude: process.env.NEARFS_LAKE_INCLUDE,
+                exclude: process.env.NEARFS_LAKE_EXCLUDE,
+            });
         }).catch(err => {
             console.error(err)
             process.exit(1);

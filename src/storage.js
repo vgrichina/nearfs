@@ -16,6 +16,19 @@ async function writeBlock(hash, data) {
     await fs.writeFile(storagePath, data);
 }
 
+const fileExists = async (file) => {
+    const stat = await fs.stat(file).catch(() => false);
+    return stat && stat.isFile();
+};
+
+const readBlock = async (hash) => {
+    const file = `${STORAGE_PATH}/${hash.toString('hex')}`;
+
+    if (await fileExists(file)) {
+        return await fs.readFile(file);
+    }
+}
+
 async function hashAndWriteBlock(data) {
     const cryptoAsync = require('@ronomon/crypto-async');
     const hash = await new Promise((resolve, reject) => {
@@ -36,6 +49,7 @@ async function readLatestBlockHeight() {
 
 module.exports = {
     writeBlock,
+    readBlock,
     hashAndWriteBlock,
     writeLatestBlockHeight,
     readLatestBlockHeight,
