@@ -71,22 +71,30 @@ const serveFile = async ctx => {
     ctx.body = 'Not found';
 }
 
+const readBlock = async (hash) => {
+    const file = `${STORAGE_PATH}/${hash.toString('hex')}`;
+
+    if (await fileExists(file)) {
+        return await fs.readFile(file);
+    }
+}
+
 const getFile = async (cid, path) => {
     console.log('getFile', cidToString(cid), path);
     // TODO: Cache ?
     const { codec, hash } = readCID(cid);
 
-    const file = `${STORAGE_PATH}/${hash.toString('hex')}`;
+    const blockData = await readBlock(hash);
+    if (!blockData) {
+        // File not found
+        return {};
+    }
 
     if (codec === 0x55) {
         assert(!path, 'CID points to a file');
-
-        if (await fileExists(file)) {
-            const blockData = await fs.readFile(file);
-            return { fileData: blockData, cid, codec };
-        }
+        return { fileData: blockData, cid, codec };
     } else if (codec === 0x70) {
-        const blockData = await fs.readFile(file);
+        const blockData = await readBlock(hash);
         const node = readPBNode(blockData);
 
         if (path) {
@@ -107,6 +115,8 @@ const getFile = async (cid, path) => {
     } else {
         throw new Error(`Unsupported codec: 0x${codec.toString(16)} `);
     }
+
+    throw new Error('Shouldn\'t go here');
 };
 
 router.get('/', async ctx => {
