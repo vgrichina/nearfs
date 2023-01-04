@@ -24,11 +24,12 @@ const fileExists = async (file) => {
 };
 
 const serveFile = async ctx => {
-    const cid = Buffer.from(multibase.decode(ctx.params.cid));
-    const fileData = await getFile(cid, ctx.params.path);
+    const rootCid = Buffer.from(multibase.decode(ctx.params.cid));
+    const path = ctx.params.path;
+    const { fileData, node, cid } = await getFile(rootCid, path);
     if (fileData) {
         if (ctx.params.path?.includes('.')) {
-            ctx.type = mime.lookup(ctx.params.path);
+            ctx.type = mime.lookup(path);
         } else if (isHtml(fileData.toString('utf8'))) {
             // TODO: Check if this check is fast enough
             ctx.type = 'text/html';
@@ -47,6 +48,24 @@ const serveFile = async ctx => {
         return;
     }
 
+    if (node) {
+        // List directory content as HTML
+        ctx.type = 'text/html';
+        // TODO: Different Etag header format for directory listings?
+        // TODO: What should be Cache-Control
+        // Return CID-based Etag like IPFS gateways
+        ctx.set('Etag', `W/"${cidToString(cid)}"`);
+        ctx.body = `
+            <html>
+                <body>
+                    <h1>Index of /ipfs/${cidToString(cid)}/${path}</h1>
+                    <ul>${node.links.map(link => `<li><a href="${`/ipfs/${cidToString(link.cid)}`}">${link.name}</a></li>`).join('\n')}
+                    </ul>
+                </body>
+            </html>
+        `;
+    }
+
     ctx.status = 404;
     ctx.body = 'Not found';
 }
@@ -63,7 +82,7 @@ const getFile = async (cid, path) => {
 
         if (await fileExists(file)) {
             const blockData = await fs.readFile(file);
-            return blockData;
+            return { fileData: blockData, cid, codec };
         }
     } else if (codec === 0x70) {
         const blockData = await fs.readFile(file);
@@ -78,17 +97,22 @@ const getFile = async (cid, path) => {
 
         const link = node.links.find(link => link.name === 'index.html');
 
-        assert(!!link, 'CID points to a directory without index.html, path is required');
-        // TODO: List directories?
+        if (link) {
+            return await getFile(link.cid);
+        }
 
-        return await getFile(link.cid);
+        // CID points to a directory without index.html
+        return { node, cid, codec };
     } else {
-        throw new Error(`Unsupported codec: 0x${codec.toString(16)}`);
+        throw new Error(`Unsupported codec: 0x${codec.toString(16)} `);
     }
 };
 
 router.get('/', async ctx => {
-    ctx.body = 'Hello World!';
+    ctx.body = `<h1>Welcome to NEARFS!</h1>
+
+        <p>See <a href="https://github.com/vgrichina/nearfs">https://github.com/vgrichina/nearfs</a> for more information.
+    `;
 });
 
 router.get('/ipfs/:cid/:path', serveFile);
