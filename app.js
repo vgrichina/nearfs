@@ -116,7 +116,7 @@ router.get('/', async ctx => {
     `;
 });
 
-router.get('/ipfs/:cid/:path', serveFile);
+router.get('/ipfs/:cid/:path(.+)', serveFile);
 router.get('/ipfs/:cid', serveFile);
 
 app
