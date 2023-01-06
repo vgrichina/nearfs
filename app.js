@@ -88,6 +88,12 @@ const getFile = async (cid, path) => {
             return await getFile(link.cid, pathParts.slice(1).join('/'));
         }
 
+        // if all links empty, this is just file split into chunks
+        if (node.links.every(link => link.name === '')) {
+            const chunks = await Promise.all(node.links.map(link => storage.readBlock(readCID(link.cid).hash)));
+            return { fileData: Buffer.concat(chunks), cid, codec };
+        }
+
         const link = node.links.find(link => link.name === 'index.html');
 
         if (link) {
