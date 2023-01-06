@@ -150,7 +150,7 @@ if (require.main === module) {
                 incude: process.env.NEARFS_LAKE_INCLUDE,
                 exclude: process.env.NEARFS_LAKE_EXCLUDE,
             });
-        }).catch(err => {
+        })().catch(err => {
             console.error(err)
             process.exit(1);
         });
