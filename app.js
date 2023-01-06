@@ -22,12 +22,12 @@ const serveFile = async ctx => {
     if (fileData) {
         if (ctx.params.path?.includes('.')) {
             ctx.type = mime.lookup(path);
-        } else if (isHtml(fileData.toString('utf8'))) {
-            // TODO: Check if this check is fast enough
-            ctx.type = 'text/html';
         } else {
             const detected = await new Promise((resolve, reject) => magic.detect(fileData, (err, result) => err ? reject(err) : resolve(result)));
             ctx.type = detected;
+            if (detected.startsWith('text/') && isHtml(fileData.toString('utf8'))) {
+                ctx.type = 'text/html';
+            }
         }
 
         // Set cache control header to indicate that resource never expires
