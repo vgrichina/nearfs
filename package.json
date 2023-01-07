@@ -15,7 +15,7 @@
     "@koa/cors": "^4.0.0",
     "@ronomon/crypto-async": "^5.0.1",
     "@types/node": "^18.0.6",
-    "fast-ipfs": "^0.0.1",
+    "fast-ipfs": "^0.1.0",
     "is-html": "^2.0.0",
     "koa": "^2.14.1",
     "koa-router": "^12.0.0",

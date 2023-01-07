@@ -1548,10 +1548,10 @@ escape-string-regexp@^1.0.5:
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
   integrity sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==
 
-fast-ipfs@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/fast-ipfs/-/fast-ipfs-0.0.1.tgz#89d98e344c2ec55d47077660a5a57eb180177962"
-  integrity sha512-w/wrJK/Ni5u3NHSBF++JiS0Oc3iUJ9VMGGuBdzFzzhFDPipccZNQAnU4G4QaVP/SQH2jkRPDQxd8YRdp6xdb2g==
+fast-ipfs@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/fast-ipfs/-/fast-ipfs-0.1.0.tgz#eca2d0dd63294085e7e776cacba367b7a9c841b5"
+  integrity sha512-3krbVFdfd2G4/qxlMBXPjsI8UyL01vsZbra63ExYkafTXt8d/DlO54JujF/vxkQ/QCSMp7rcq87Hoe7rTBgk1A==
   dependencies:
     multibase "^4.0.6"
 
