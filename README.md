@@ -8,6 +8,12 @@ NEARFS is a distributed file system compatible with IPFS that uses the NEAR bloc
 - custom indexer can be used to collect all blocks and store them in a local file system (see `scripts/load-from-near-lake.js`)
 - IPFS-comptatible gateway can be used to access files (see `app.js`)
 
+## Useful tools
+
+- [web4-deploy](https://github.com/vgrichina/web4-deploy) Deploy your website to NEAR blockchain + IPFS/NEARFS.
+- [fast-ipfs](https://github.com/vgrichina/fast-ipfs) Low level utilties to work with IPFS blocks, etc.
+- https://near.page Web4 gateway which uses NEARFS to resolve `ipfs://` links when possible.
+
 ## How to run gateway
 
 - `yarn install`
