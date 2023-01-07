@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tape test/*.test.js | colortape"
   },
   "keywords": [],
   "author": "",
@@ -29,5 +29,10 @@
     "node-fetch": "^3.2.6",
     "write-file-atomic": "^5.0.0",
     "yargs": "^17.6.2"
+  },
+  "devDependencies": {
+    "colortape": "^0.1.2",
+    "supertest": "^6.3.3",
+    "tape": "^5.6.1"
   }
 }
