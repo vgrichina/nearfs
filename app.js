@@ -10,7 +10,7 @@ const mime = require('mime-types');
 const { Magic, MAGIC_MIME } = require('mmmagic');
 const isHtml = require('is-html');
 
-const { readPBNode, cidToString, readCID } = require('fast-ipfs');
+const { readPBNode, cidToString, readCID, CODEC_RAW, CODEC_DAG_PB, readUnixFSData } = require('fast-ipfs');
 const storage = require('./src/storage');
 
 const magic = new Magic(MAGIC_MIME);
@@ -74,10 +74,10 @@ const getFile = async (cid, path) => {
         return {};
     }
 
-    if (codec === 0x55) {
+    if (codec === CODEC_RAW) {
         assert(!path, 'CID points to a file');
         return { fileData: blockData, cid, codec };
-    } else if (codec === 0x70) {
+    } else if (codec === CODEC_DAG_PB) {
         const blockData = await storage.readBlock(hash);
         const node = readPBNode(blockData);
 
@@ -86,6 +86,10 @@ const getFile = async (cid, path) => {
             const link = node.links.find(link => link.name === pathParts[0]);
 
             return await getFile(link.cid, pathParts.slice(1).join('/'));
+        }
+
+        if (node.data && node.links.length === 0) {
+            return { fileData: readUnixFSData(node.data).data, cid, codec };
         }
 
         // if all links empty, this is just file split into chunks
