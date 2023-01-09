@@ -86,6 +86,22 @@ test('/ipfs/:cid littlelink.car directory listing', async t => {
     `));
 });
 
+test('/ipfs/:cid/:path web4.car serve index.html', async t => {
+    await loadCar('test/data/web4.car');
+
+    const { status, text } = await request.get('/ipfs/bafybeidg3ohf4kscsf6cjbgg7vttcvu7q4olena3kwhpl5wl3trhhougyi/dist/');
+    t.isEqual(status, 200);
+    t.match(text, /<title>web4: Unstoppable websites on NEAR blockchain and IPFS\/Filecoin.<\/title>/);
+});
+
+test('/ipfs/:cid/:path web4.car serve css and detect mime from extension', async t => {
+    await loadCar('test/data/web4.car');
+
+    const { status, headers } = await request.get('/ipfs/bafybeidg3ohf4kscsf6cjbgg7vttcvu7q4olena3kwhpl5wl3trhhougyi/dist/normalize.css');
+    t.isEqual(status, 200);
+    t.match(headers['content-type'], /^text\/css/);
+});
+
 async function loadCar(carFile) {
     const carData = await fs.readFile(carFile);
     const [, ...rawBlocks] = await readCAR(carData);
