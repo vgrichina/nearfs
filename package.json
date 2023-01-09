@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "tape test/*.test.js | colortape"
+    "test": "tape test/*.test.js | colortape",
+    "coverage" : "npx nyc npm run test && npx nyc report --reporter=lcov"
   },
   "keywords": [],
   "author": "",
