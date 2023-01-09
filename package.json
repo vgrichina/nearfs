@@ -5,8 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "tape test/*.test.js | colortape",
-    "coverage" : "npx nyc npm run test && npx nyc report --reporter=lcov"
+    "test": "tape test/*.test.js | tap-diff",
+    "coverage": "npx nyc npm run test && npx nyc report --reporter=lcov"
   },
   "keywords": [],
   "author": "",
@@ -32,8 +32,8 @@
     "yargs": "^17.6.2"
   },
   "devDependencies": {
-    "colortape": "^0.1.2",
     "supertest": "^6.3.3",
+    "tap-diff": "^0.1.1",
     "tape": "^5.6.1"
   }
 }
