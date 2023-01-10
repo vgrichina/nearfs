@@ -7,6 +7,7 @@ NEARFS is a distributed file system compatible with IPFS that uses the NEAR bloc
 - IPFS blocks are recorded in transaction history as `fs_store` function calls
 - custom indexer can be used to collect all blocks and store them in a local file system (see `scripts/load-from-near-lake.js`)
 - IPFS-comptatible gateway can be used to access files (see `app.js`)
+- Public gateway is available at https://ipfs.web4.near.page. It provides access to data stored on NEAR mainnet.
 
 ## Useful tools
 
@@ -38,5 +39,38 @@ NEARFS is a distributed file system compatible with IPFS that uses the NEAR bloc
 - `AWS_ACCESS_KEY_ID` - AWS access key ID to use when loading blocks from NEAR Lake
 - `AWS_SECRET_ACCESS_KEY` - AWS secret access key to use when loading blocks from NEAR Lake
 
+## API
+
+Following IPFS gateway APIs are currently implemented.
+Note that there might be some differences in details like error handling, etc.
+
+Most notable difference with regular IPFS is that all calls would either return immediately or 404. There is no wait for content to be feched from other nodes, etc.
+
+Also only CIDv1 is currently supported (see examples).
 
 
+### `GET /ipfs/:cid`
+
+Returns IPFS file with given CID.
+
+Example:
+
+https://ipfs.web4.near.page/ipfs/bafybeicit72w2sl3agal2jftpkrzwd773fjgdk4dym7pq2pbojyif72v5e
+
+### `GET /ipfs/:cid/:path`
+
+Returns IPFS file with given CID and path.
+
+### Directory listing
+
+If directory is requested and it has no `index.html` – HTML with it's contents is returned.
+
+Otherwise `index.html` is served.
+
+**Example directory**:
+
+https://ipfs.web4.near.page/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/
+
+**Example index.html**:
+
+https://ipfs.web4.near.page/ipfs/bafybeidg3ohf4kscsf6cjbgg7vttcvu7q4olena3kwhpl5wl3trhhougyi/dist/
