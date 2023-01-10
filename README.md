@@ -53,13 +53,17 @@ Also only CIDv1 is currently supported (see examples).
 
 Returns IPFS file with given CID.
 
-Example:
+**Example:**
 
 https://ipfs.web4.near.page/ipfs/bafybeicit72w2sl3agal2jftpkrzwd773fjgdk4dym7pq2pbojyif72v5e
 
 ### `GET /ipfs/:cid/:path`
 
 Returns IPFS file with given CID and path.
+
+**Example:**
+
+https://ipfs.web4.near.page/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/privacy.html
 
 ### Directory listing
 
