@@ -70,10 +70,10 @@ test('/ipfs/:cid littlelink.car directory listing', async t => {
     t.isEqual(flattenHtml(text), flattenHtml(`
         <html>
             <head>
-                <title>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm</title>
+                <title>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/</title>
             </head>
             <body>
-                <h1>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm</h1>
+                <h1>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/</h1>
                 <ul>
                     <li><a href="/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/css">css</a></li>
                     <li><a href="/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/deploy.js">deploy.js</a></li>
@@ -85,6 +85,30 @@ test('/ipfs/:cid littlelink.car directory listing', async t => {
         </html>
     `));
 });
+
+test('/ipfs/:cid/:path littlelink.car serve deeper listing', async t => {
+    await loadCar('test/data/littlelink.car');
+
+    const { status, text } = await request.get('/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/');
+    t.isEqual(status, 200);
+    t.isEqual(flattenHtml(text), flattenHtml(`
+        <html>
+            <head>
+                <title>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/</title>
+            </head>
+            <body>
+                <h1>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/</h1>
+                <ul>
+                    <li><a href="/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/avatar.png">avatar.png</a></li>
+                    <li><a href="/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/avatar.svg">avatar.svg</a></li>
+                    <li><a href="/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/avatar@2x.png">avatar@2x.png</a></li>
+                    <li><a href="/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/icons">icons</a></li>
+                </ul>
+            </body>
+        </html>
+    `));
+});
+
 
 test('/ipfs/:cid/:path web4.car serve index.html', async t => {
     await loadCar('test/data/web4.car');

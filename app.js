@@ -47,7 +47,7 @@ const serveFile = async ctx => {
         // TODO: What should be Cache-Control
         // Return CID-based Etag like IPFS gateways
         ctx.set('Etag', `W/"${cidToString(cid)}"`);
-        const ipfsPath = `/ipfs/${cidToString(cid)}${path ? '/' + path : ''}`;
+        const ipfsPath = `/ipfs/${cidToString(rootCid)}/${path || ''}`;
         ctx.body = `
             <html>
                 <head>
@@ -56,7 +56,7 @@ const serveFile = async ctx => {
                 <body>
                     <h1>Index of ${ipfsPath}</h1>
                     <ul>
-                        ${node.links.map(link => `<li><a href="${ipfsPath}/${link.name}">${link.name}</a></li>`).join('\n')}
+                        ${node.links.map(link => `<li><a href="${ipfsPath}${link.name}">${link.name}</a></li>`).join('\n')}
                     </ul>
                 </body>
             </html>
