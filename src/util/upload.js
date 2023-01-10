@@ -56,7 +56,6 @@ function splitOnBatches(newBlocks) {
 
 async function uploadCAR(account, carBuffer, options = DEFAULT_OPTIONS) {
     const { log } = options;
-    console.log('uploadCAR', account, carBuffer, options);
 
     log('Uploading CAR file to NEAR File System...');
 
@@ -67,7 +66,6 @@ async function uploadCAR(account, carBuffer, options = DEFAULT_OPTIONS) {
 
     let totalBlocks = batches.reduce((a, b) => a + b.length, 0);
     let currentBlocks = 0;
-    console.log('batches', batches);
     for (let batch of batches) {
         try {
             await account.signAndSendTransaction({
