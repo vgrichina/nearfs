@@ -25,7 +25,7 @@
     "minimatch": "^5.1.1",
     "mmmagic": "^0.5.3",
     "multibase": "^4.0.6",
-    "near-api-js": "^1.1.0",
+    "near-api-js": "^0.45.1",
     "near-lake-framework": "^1.0.6",
     "node-fetch": "^3.2.6",
     "timeout-signal": "^1.1.0",
