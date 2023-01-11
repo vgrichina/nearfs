@@ -109,13 +109,21 @@ test('/ipfs/:cid/:path littlelink.car serve deeper listing', async t => {
     `));
 });
 
-
 test('/ipfs/:cid/:path web4.car serve index.html', async t => {
     await loadCar('test/data/web4.car');
 
     const { status, text } = await request.get('/ipfs/bafybeidg3ohf4kscsf6cjbgg7vttcvu7q4olena3kwhpl5wl3trhhougyi/dist/');
     t.isEqual(status, 200);
     t.match(text, /<title>web4: Unstoppable websites on NEAR blockchain and IPFS\/Filecoin.<\/title>/);
+});
+
+test('/ipfs/:cid/:path web4.car redirect if directory misses /', async t => {
+    await loadCar('test/data/web4.car');
+
+    const { status, text, headers } = await request.get('/ipfs/bafybeidg3ohf4kscsf6cjbgg7vttcvu7q4olena3kwhpl5wl3trhhougyi/dist');
+    t.isEqual(status, 301);
+    t.isEqual(headers.location, '/ipfs/bafybeidg3ohf4kscsf6cjbgg7vttcvu7q4olena3kwhpl5wl3trhhougyi/dist/');
+    t.isEqual(text, '<a href="/ipfs/bafybeidg3ohf4kscsf6cjbgg7vttcvu7q4olena3kwhpl5wl3trhhougyi/dist/">Moved Permanently</a>.');
 });
 
 test('/ipfs/:cid/:path web4.car serve css and detect mime from extension', async t => {

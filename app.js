@@ -17,8 +17,9 @@ const magic = new Magic(MAGIC_MIME);
 
 const serveFile = async ctx => {
     const rootCid = Buffer.from(multibase.decode(ctx.params.cid));
-    const path = ctx.params.path;
-    const { fileData, node, cid } = await getFile(rootCid, path);
+    const path = ctx.params.path || '';
+    const expectDirectory = ctx.path.endsWith('/');
+    const { fileData, node, cid } = await getFile(rootCid, path, { useIndexHTML: expectDirectory });
     if (fileData) {
         if (ctx.params.path?.includes('.')) {
             ctx.type = mime.lookup(path);
@@ -41,6 +42,13 @@ const serveFile = async ctx => {
     }
 
     if (node) {
+        if (!expectDirectory) {
+            ctx.redirect(ctx.path + '/');
+            ctx.status = 301;
+            ctx.body = `<a href="${ctx.path}/">Moved Permanently</a>.`;
+            return;
+        }
+
         // List directory content as HTML
         ctx.type = 'text/html';
         // TODO: Different Etag header format for directory listings?
@@ -68,7 +76,7 @@ const serveFile = async ctx => {
     ctx.body = 'Not found';
 }
 
-const getFile = async (cid, path) => {
+const getFile = async (cid, path, { useIndexHTML }) => {
     console.log('getFile', cidToString(cid), path);
     // TODO: Cache ?
     const { codec, hash } = readCID(cid);
@@ -95,7 +103,7 @@ const getFile = async (cid, path) => {
                 return {};
             }
 
-            return await getFile(link.cid, pathParts.slice(1).join('/'));
+            return await getFile(link.cid, pathParts.slice(1).join('/'), { useIndexHTML });
         }
 
         if (node.data && node.links.length === 0) {
@@ -108,13 +116,15 @@ const getFile = async (cid, path) => {
             return { fileData: Buffer.concat(chunks), cid, codec };
         }
 
-        const link = node.links.find(link => link.name === 'index.html');
+        if (useIndexHTML) {
+            const link = node.links.find(link => link.name === 'index.html');
 
-        if (link) {
-            return await getFile(link.cid);
+            if (link) {
+                return await getFile(link.cid, '', { useIndexHTML: false });
+            }
         }
 
-        // CID points to a directory without index.html
+        // CID points to a directory without index.html (or useIndexHTML is false)
         return { node, cid, codec };
     } else {
         throw new Error(`Unsupported codec: 0x${codec.toString(16)} `);
