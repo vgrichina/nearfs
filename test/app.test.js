@@ -3,7 +3,7 @@ const test = require('tape');
 const fs = require('fs').promises;
 const { readCAR, readBlock } = require('fast-ipfs');
 
-const storage = require('../src/storage');
+const storage = require('../src/storage/fs');
 const { computeHash } = require('../src/util/hash');
 const app = require('../app');
 const request = require('supertest')(app.callback());
