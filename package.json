@@ -14,7 +14,6 @@
   "dependencies": {
     "@aws-sdk/credential-providers": "^3.231.0",
     "@koa/cors": "^4.0.0",
-    "@ronomon/crypto-async": "^5.0.1",
     "@types/node": "^18.0.6",
     "fast-ipfs": "^0.1.0",
     "is-html": "^2.0.0",
