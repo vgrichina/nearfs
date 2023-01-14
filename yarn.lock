@@ -1597,10 +1597,10 @@ events-to-array@^1.0.1:
   resolved "https://registry.yarnpkg.com/events-to-array/-/events-to-array-1.1.2.tgz#2d41f563e1fe400ed4962fe1a4d5c6a7539df7f6"
   integrity sha512-inRWzRY7nG+aXZxBzEqYKB3HPgwflZRopAjDCHv0whhRx+MTUr1ei0ICZUypdyE0HRm4L2d5VEcIqLD6yl+BFA==
 
-fast-ipfs@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/fast-ipfs/-/fast-ipfs-0.1.0.tgz#eca2d0dd63294085e7e776cacba367b7a9c841b5"
-  integrity sha512-3krbVFdfd2G4/qxlMBXPjsI8UyL01vsZbra63ExYkafTXt8d/DlO54JujF/vxkQ/QCSMp7rcq87Hoe7rTBgk1A==
+fast-ipfs@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/fast-ipfs/-/fast-ipfs-0.2.0.tgz#a409560dd8e0d646577d5a53ed6fc7b8ceebcc07"
+  integrity sha512-RDyOwEHNUJhnr41ibaLkwaewU5UzkVhBuSdQBrClMzva3m80FReH/16SmNxutVNo1Ssqz46t+UUG1wYiCgv9pQ==
   dependencies:
     multibase "^4.0.6"
 

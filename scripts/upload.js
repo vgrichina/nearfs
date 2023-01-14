@@ -1,10 +1,11 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const meow = require('meow');
 const { connect, keyStores, Account, KeyPair } = require('near-api-js');
+const { uploadBlock } = require('../src/util/upload');
 
 const cli = meow(`
     Usage
-        upload <src-file> <signer-account.near> <receiver-account.near>
+        upload <src-file> <signer-account.near>
         
     Select network using NODE_ENV variable.
 `, {
@@ -31,10 +32,5 @@ const NEAR_SIGNER_KEY = process.env.NEAR_SIGNER_KEY;
     })
     let account = new Account(near.connection, NEAR_SIGNER_ACCOUNT);
 
-    await account.functionCall({
-        contractId: receiverId,
-        methodName: 'fs_store',
-        args: await fs.promises.readFile(srcFile)
-    });
-
+    await uploadBlock(account, await fs.readFile(srcFile));
 })();

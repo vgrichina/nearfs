@@ -1,6 +1,7 @@
 const timeoutSignal = require('timeout-signal');
 const { transactions } = require('near-api-js');
-const { readCAR, readBlock, cidToString } = require('fast-ipfs');
+const { readCAR, readBlock, cidToString, CODEC_RAW, packCID } = require('fast-ipfs');
+const { computeHash } = require('./hash');
 
 const DEFAULT_OPTIONS = {
     log: console.log,
@@ -54,6 +55,32 @@ function splitOnBatches(newBlocks) {
     return batches;
 }
 
+function isExpectedUploadError(e) {
+    return e.message.includes('Cannot find contract code for account') || e.message.includes('Contract method is not found');
+}
+
+async function uploadBlock(account, buffer, options = DEFAULT_OPTIONS) {
+    const hash = await computeHash(buffer);
+    const cid = packCID({ hash });
+    const cid32 = cidToString(cid);
+
+    if (await isAlreadyUploaded(cid, options)) {
+        return cid32;
+    }
+
+    try {
+        await account.signAndSendTransaction({
+            receiverId: account.accountId,
+            actions: [transactions.functionCall('fs_store', buffer, 30 * 10 ** 12, 0)]
+        });
+    } catch (e) {
+        if (!isExpectedUploadError(e)) {
+            throw e;
+        }
+    }
+    return cid32;
+}
+
 async function uploadCAR(account, carBuffer, options = DEFAULT_OPTIONS) {
     const { log } = options;
 
@@ -73,9 +100,7 @@ async function uploadCAR(account, carBuffer, options = DEFAULT_OPTIONS) {
                 actions: batch.map(data => transactions.functionCall('fs_store', data, 30 * 10 ** 12, 0))
             });
         } catch (e) {
-            if (e.message.includes('Cannot find contract code for account') || e.message.includes('Contract method is not found')) {
-                // Expected error
-            } else {
+            if (!isExpectedUploadError(e)) {
                 throw e;
             }
         }
@@ -87,5 +112,7 @@ async function uploadCAR(account, carBuffer, options = DEFAULT_OPTIONS) {
 
 module.exports = {
     isAlreadyUploaded,
-    uploadCAR
+    uploadBlock,
+    uploadCAR,
 }
+
