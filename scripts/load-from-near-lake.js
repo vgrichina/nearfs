@@ -2,6 +2,7 @@ const { stream } = require('near-lake-framework');
 const minimatch = require('minimatch');
 
 const storage = require('../src/storage');
+const { computeHash } = require('../src/util/hash');
 
 let totalMessages = 0;
 let timeStarted = Date.now();
@@ -64,7 +65,8 @@ async function dumpBlockReceipts(streamerMessage, { include, exclude }) {
                     if (actionArgs.methodName === 'fs_store') {
                         const data = Buffer.from(actionArgs.args, 'base64');
                         try {
-                            await storage.hashAndWriteBlock(data);
+                            const hash = await computeHash(data);
+                            await storage.writeBlock(hash, data);
                         } catch (e) {
                             console.log('Error writing to storage', e);
                             process.exit(1);

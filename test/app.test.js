@@ -4,6 +4,7 @@ const fs = require('fs').promises;
 const { readCAR, readBlock } = require('fast-ipfs');
 
 const storage = require('../src/storage');
+const { computeHash } = require('../src/util/hash');
 const app = require('../app');
 const request = require('supertest')(app.callback());
 
@@ -139,6 +140,7 @@ async function loadCar(carFile) {
     const [, ...rawBlocks] = await readCAR(carData);
     for (const rawBlock of rawBlocks) {
         const block = await readBlock(rawBlock.data);
-        await storage.hashAndWriteBlock(block.data);
+        const hash = await computeHash(block.data);
+        await storage.writeBlock(hash, block.data);
     }
 }

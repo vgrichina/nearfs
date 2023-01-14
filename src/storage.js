@@ -29,15 +29,6 @@ const readBlock = async (hash) => {
     }
 }
 
-async function hashAndWriteBlock(data) {
-    const cryptoAsync = require('@ronomon/crypto-async');
-    const hash = await new Promise((resolve, reject) => {
-        cryptoAsync.hash('sha256', data, (error, hash) => error ? reject(error) : resolve(hash));
-    });
-    await writeBlock(hash, data);
-    return hash;
-}
-
 async function writeLatestBlockHeight(height) {
     const writeFileAtomic = require('write-file-atomic');
     await writeFileAtomic(`${STORAGE_PATH}/latest_block_height`, height.toString());
@@ -50,7 +41,6 @@ async function readLatestBlockHeight() {
 module.exports = {
     writeBlock,
     readBlock,
-    hashAndWriteBlock,
     writeLatestBlockHeight,
     readLatestBlockHeight,
 };
