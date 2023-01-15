@@ -36,7 +36,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'yarn'
     - run: yarn
-    - run: tape test/*.js
+    - run: yarn tape test/*.js
     - name: Run tests with Minio storage
       run: |
         aws --endpoint-url http://127.0.0.1:9000/ --region 'us-east-1' s3 mb s3://testbucket
