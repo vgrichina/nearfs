@@ -161,7 +161,7 @@ if (require.main === module) {
         app.listen(PORT);
         console.log('Listening on http://localhost:%d/', PORT);
 
-        const INIT_STORAGE = ['yes', 'true'].includes(process.env.NEARFS_INIT_STORAGE.toLowerCase());
+        const INIT_STORAGE = ['yes', 'true'].includes((process.env.NEARFS_INIT_STORAGE || '').toLowerCase());
         if (INIT_STORAGE) {
             await storage.init();
         }
