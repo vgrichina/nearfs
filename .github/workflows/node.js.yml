@@ -39,5 +39,5 @@ jobs:
     - run: yarn test
     - name: Run tests with Minio storage
       run: |
-        aws --endpoint-url http://127.0.0.1:9000/ s3 mb s3://testbucket
+        aws --endpoint-url http://127.0.0.1:9000/ --region 'us-east-1' s3 mb s3://testbucket
         NEARFS_STORAGE_TYPE=s3 yarn test
