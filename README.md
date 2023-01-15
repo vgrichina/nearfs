@@ -6,13 +6,13 @@ NEARFS is a distributed file system compatible with IPFS that uses the NEAR bloc
 
 - IPFS blocks are recorded in transaction history as `fs_store` function calls
 - custom indexer can be used to collect all blocks and store them in a local file system (see `scripts/load-from-near-lake.js`)
-- IPFS-comptatible gateway can be used to access files (see `app.js`)
+- IPFS-compatible gateway can be used to access files (see `app.js`)
 - Public gateway is available at https://ipfs.web4.near.page. It provides access to data stored on NEAR mainnet.
 
 ## Useful tools
 
 - [web4-deploy](https://github.com/vgrichina/web4-deploy) Deploy your website to NEAR blockchain + IPFS/NEARFS.
-- [fast-ipfs](https://github.com/vgrichina/fast-ipfs) Low level utilties to work with IPFS blocks, etc.
+- [fast-ipfs](https://github.com/vgrichina/fast-ipfs) Low level utilities to work with IPFS blocks, etc.
 - https://near.page Web4 gateway which uses NEARFS to resolve `ipfs://` links when possible.
 
 ## How to run gateway
@@ -44,7 +44,7 @@ NEARFS is a distributed file system compatible with IPFS that uses the NEAR bloc
 Following IPFS gateway APIs are currently implemented.
 Note that there might be some differences in details like error handling, etc.
 
-Most notable difference with regular IPFS is that all calls would either return immediately or 404. There is no wait for content to be feched from other nodes, etc.
+Most notable difference with regular IPFS is that all calls would either return immediately or 404. There is no wait for content to be fetched from other nodes, etc.
 
 Also only CIDv1 is currently supported (see examples).
 
@@ -67,7 +67,7 @@ https://ipfs.web4.near.page/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erj
 
 ### Directory listing
 
-If directory is requested and it has no `index.html` – HTML with it's contents is returned.
+If directory is requested and it has no `index.html` – HTML with its contents is returned.
 
 Otherwise `index.html` is served.
 
