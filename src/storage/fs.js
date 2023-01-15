@@ -2,6 +2,10 @@ const STORAGE_PATH = process.env.NEARFS_STORAGE_PATH || './storage';
 
 const fs = require('fs/promises');
 
+async function init() {
+    await fs.mkdir(STORAGE_PATH, { recursive: true });
+}
+
 async function writeBlock(hash, data) {
     const storagePath = `${STORAGE_PATH}/${hash.toString('hex')}`;
     // check if file exists
@@ -39,6 +43,7 @@ async function readLatestBlockHeight() {
 }
 
 module.exports = {
+    init,
     writeBlock,
     readBlock,
     writeLatestBlockHeight,

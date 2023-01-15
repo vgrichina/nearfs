@@ -14,6 +14,10 @@ const minio = new Minio.Client({
     secretKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
+async function init() {
+    await minio.makeBucket(STORAGE_S3_BUCKET_NAME, STORAGE_S3_REGION);
+}
+
 async function writeBlock(hash, data) {
     // Check if object exists already
     try {
@@ -65,6 +69,7 @@ async function readLatestBlockHeight() {
 }
 
 module.exports = {
+    init,
     writeBlock,
     readBlock,
     writeLatestBlockHeight,

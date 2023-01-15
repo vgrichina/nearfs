@@ -156,14 +156,19 @@ module.exports = app;
 
 // Check if module is included or run directly
 if (require.main === module) {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT);
-    console.log('Listening on http://localhost:%d/', PORT);
+    (async () => {
+        const PORT = process.env.PORT || 3000;
+        app.listen(PORT);
+        console.log('Listening on http://localhost:%d/', PORT);
 
-    if (['yes', 'true'].includes((process.env.NEARFS_LOAD_NEAR_LAKE || '').toLowerCase())) {
-        const { loadStream } = require('./scripts/load-from-near-lake');
+        const INIT_STORAGE = ['yes', 'true'].includes(process.env.NEARFS_INIT_STORAGE.toLowerCase());
+        if (INIT_STORAGE) {
+            await storage.init();
+        }
 
-        (async () => {
+        if (['yes', 'true'].includes((process.env.NEARFS_LOAD_NEAR_LAKE || '').toLowerCase())) {
+            const { loadStream } = require('./scripts/load-from-near-lake');
+
             const startBlockHeight = await storage.readLatestBlockHeight() || process.env.NEARFS_DEFAULT_START_BLOCK_HEIGHT || 0;
             await loadStream({
                 startBlockHeight,
@@ -174,9 +179,9 @@ if (require.main === module) {
                 incude: process.env.NEARFS_LAKE_INCLUDE,
                 exclude: process.env.NEARFS_LAKE_EXCLUDE,
             });
-        })().catch(err => {
-            console.error(err)
-            process.exit(1);
-        });
-    }
+        }
+    })().catch(e => {
+        console.error(e);
+        process.exit(1);
+    });
 }
