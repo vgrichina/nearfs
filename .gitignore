@@ -1,5 +1,5 @@
 node_modules
-storage
+/storage
 .nyc_output
 coverage
 

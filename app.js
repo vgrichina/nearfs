@@ -11,7 +11,7 @@ const { Magic, MAGIC_MIME } = require('mmmagic');
 const isHtml = require('is-html');
 
 const { readPBNode, cidToString, readCID, CODEC_RAW, CODEC_DAG_PB, readUnixFSData } = require('fast-ipfs');
-const storage = require('./src/storage/fs');
+const storage = require('./src/storage');
 
 const magic = new Magic(MAGIC_MIME);
 

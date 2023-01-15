@@ -1,7 +1,7 @@
 const { stream } = require('near-lake-framework');
 const minimatch = require('minimatch');
 
-const storage = require('../src/storage/fs');
+const storage = require('../src/storage');
 const { computeHash } = require('../src/util/hash');
 
 let totalMessages = 0;
