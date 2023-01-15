@@ -165,21 +165,6 @@ if (require.main === module) {
         if (INIT_STORAGE) {
             await storage.init();
         }
-
-        if (['yes', 'true'].includes((process.env.NEARFS_LOAD_NEAR_LAKE || '').toLowerCase())) {
-            const { loadStream } = require('./scripts/load-from-near-lake');
-
-            const startBlockHeight = await storage.readLatestBlockHeight() || process.env.NEARFS_DEFAULT_START_BLOCK_HEIGHT || 0;
-            await loadStream({
-                startBlockHeight,
-                bucketName: process.env.NEARFS_LAKE_BUCKET_NAME,
-                regionName: process.env.NEARFS_LAKE_REGION_NAME,
-                endpoint: process.env.NEARFS_LAKE_ENDPOINT,
-                batchSize: process.env.NEARFS_LAKE_BATCH_SIZE,
-                incude: process.env.NEARFS_LAKE_INCLUDE,
-                exclude: process.env.NEARFS_LAKE_EXCLUDE,
-            });
-        }
     })().catch(e => {
         console.error(e);
         process.exit(1);
