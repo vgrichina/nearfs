@@ -2,6 +2,9 @@ const STORAGE_S3_REGION = process.env.NEARFS_STORAGE_S3_REGION || 'us-east-1';
 const STORAGE_S3_ENDPOINT = process.env.NEARFS_STORAGE_S3_ENDPOINT || 'http://localhost:9000'; // MinIO
 const STORAGE_S3_BUCKET_NAME = process.env.NEARFS_STORAGE_S3_BUCKET_NAME || 'nearfs-storage';
 
+const ACCESS_KEY = process.env.NEARFS_STORAGE_AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+const SECRET_KEY = process.env.NEARFS_STORAGE_AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+
 // NOTE: Minio is used as aws-sdk doesn't seem to work well with MinIO out of the box
 const Minio = require('minio');
 const endpointURL = new URL(STORAGE_S3_ENDPOINT);
@@ -10,8 +13,8 @@ const minio = new Minio.Client({
     region: STORAGE_S3_REGION,
     port: parseInt(endpointURL.port),
     useSSL: endpointURL.protocol === 'https:',
-    accessKey: process.env.AWS_ACCESS_KEY_ID,
-    secretKey: process.env.AWS_SECRET_ACCESS_KEY,
+    accessKey: ACCESS_KEY,
+    secretKey: SECRET_KEY,
 });
 
 async function init() {
