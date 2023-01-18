@@ -31,7 +31,7 @@ async function writeBlock(hash, data) {
         await minio.statObject(STORAGE_S3_BUCKET_NAME, hash.toString('hex'));
         return; // no error means that object exists already
     } catch (e) {
-        if (['NoSuchKey', 'NotFound'].includes(e.code)) {
+        if (!['NoSuchKey', 'NotFound'].includes(e.code)) {
             debug('writeBlock', STORAGE_S3_BUCKET_NAME, hash.toString('hex'), 'error', e);
             throw e;
         }
