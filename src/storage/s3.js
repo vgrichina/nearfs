@@ -10,7 +10,7 @@ const Minio = require('minio');
 const endpointURL = new URL(STORAGE_S3_ENDPOINT);
 const minio = new Minio.Client({
     endPoint: endpointURL.hostname,
-    region: STORAGE_S3_REGION,
+    // region: STORAGE_S3_REGION, TODO: Figure out how to use it correctly
     port: parseInt(endpointURL.port),
     useSSL: endpointURL.protocol === 'https:',
     accessKey: ACCESS_KEY,
