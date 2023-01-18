@@ -5,6 +5,8 @@ const STORAGE_S3_BUCKET_NAME = process.env.NEARFS_STORAGE_S3_BUCKET_NAME || 'nea
 const ACCESS_KEY = process.env.NEARFS_STORAGE_AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
 const SECRET_KEY = process.env.NEARFS_STORAGE_AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
 
+const debug = require('debug')('nearfs:storage:s3');
+
 // NOTE: Minio is used as aws-sdk doesn't seem to work well with MinIO out of the box
 const Minio = require('minio');
 const endpointURL = new URL(STORAGE_S3_ENDPOINT);
@@ -18,17 +20,19 @@ const minio = new Minio.Client({
 });
 
 async function init() {
+    debug('init');
     await minio.makeBucket(STORAGE_S3_BUCKET_NAME, STORAGE_S3_REGION);
 }
 
 async function writeBlock(hash, data) {
+    debug('writeBlock', STORAGE_S3_BUCKET_NAME, hash.toString('hex'), data.length, 'bytes');
     // Check if object exists already
     try {
         await minio.statObject(STORAGE_S3_BUCKET_NAME, hash.toString('hex'));
         return; // no error means that object exists already
     } catch (e) {
-        console.log('error writing', JSON.stringify(e));
         if (e.code !== 'NoSuchKey') {
+            debug('writeBlock', STORAGE_S3_BUCKET_NAME, hash.toString('hex'), 'error', e);
             throw e;
         }
     }
@@ -45,6 +49,7 @@ async function streamToBuffer(readableStream) {
 }
 
 async function readBlock(hash) {
+    debug('readBlock', STORAGE_S3_BUCKET_NAME, hash.toString('hex'));
     try {
         const readableStream = await minio.getObject(STORAGE_S3_BUCKET_NAME, hash.toString('hex'));
         return streamToBuffer(readableStream);
@@ -52,6 +57,7 @@ async function readBlock(hash) {
         if (e.code === 'NoSuchKey') {
             return null;
         }
+        debug('readBlock', STORAGE_S3_BUCKET_NAME, hash.toString('hex'), 'error', e);
         throw e;
     }
 }
