@@ -21,7 +21,10 @@ const serveFile = async ctx => {
     const expectDirectory = ctx.path.endsWith('/');
     const { fileData, node, cid } = await getFile(rootCid, path, { useIndexHTML: expectDirectory });
     if (fileData) {
-        if (ctx.params.path?.includes('.')) {
+        if (ctx.query.filename) {
+            ctx.type = mime.lookup(ctx.query.filename);
+            ctx.attachment(ctx.query.filename, { type: 'inline' });
+        } else if (ctx.params.path?.includes('.')) {
             ctx.type = mime.lookup(path);
         } else {
             const detected = await new Promise((resolve, reject) => magic.detect(fileData, (err, result) => err ? reject(err) : resolve(result)));

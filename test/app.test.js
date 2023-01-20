@@ -110,6 +110,22 @@ test('/ipfs/:cid/:path littlelink.car serve deeper listing', async t => {
     `));
 });
 
+test('/ipfs/:cid littlelink.car detect css mime from path', async t => {
+    await loadCar('test/data/littlelink.car');
+
+    const { status, headers } = await request.get('/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/css/normalize.css');
+    t.isEqual(status, 200);
+    t.isEqual(headers['content-type'], 'text/css; charset=utf-8');
+});
+
+test('/ipfs/:cid littlelink.car detect css mime from filename parameter', async t => {
+    await loadCar('test/data/littlelink.car');
+
+    const { status, headers } = await request.get('/ipfs/bafkreianuugp6nlqritzbwwaiv7m3q7ffy6ichfo7e6cot5t6okop2fwx4?filename=normalize.css');
+    t.isEqual(status, 200);
+    t.isEqual(headers['content-type'], 'text/css; charset=utf-8');
+});
+
 test('/ipfs/:cid/:path web4.car serve index.html', async t => {
     await loadCar('test/data/web4.car');
 
