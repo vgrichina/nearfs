@@ -119,7 +119,9 @@ async function uploadBlocks(account, blocks, options = DEFAULT_OPTIONS) {
 
         currentBlocks += batch.length;
         log(`Uploaded ${currentBlocks} / ${totalBlocks} blocks to NEARFS`);
-        statusCallback({ currentBlocks, totalBlocks });
+        if (statusCallback) {
+            statusCallback({ currentBlocks, totalBlocks });
+        }
     }
 }
 
