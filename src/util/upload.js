@@ -5,6 +5,7 @@ const { computeHash } = require('./hash');
 
 const DEFAULT_OPTIONS = {
     log: console.log,
+    statusCallback: ({ currentBlocks, totalBlocks }) => {},
     timeout: 2500,
     retryCount: 3,
     gatewayUrl: 'https://ipfs.web4.near.page',
@@ -86,11 +87,22 @@ async function uploadCAR(account, carBuffer, options = DEFAULT_OPTIONS) {
 
     log('Uploading CAR file to NEAR File System...');
 
+    const blocks = await blocksToUpload(carBuffer, options);
+    return await uploadBlocks(account, blocks, options);
+}
+
+async function blocksToUpload(carBuffer, options = DEFAULT_OPTIONS) {
     const blocks = readCAR(carBuffer).slice(1).map(b => readBlock(b.data));
     const TRHOTTLE_MS = 25;
     const blocksAndStatus = (await Promise.all(blocks.map(async ({ data, cid }, i) => ({ data, cid, uploaded: (await sleep(i * TRHOTTLE_MS), await isAlreadyUploaded(cid, options)) }))));
-    const batches = splitOnBatches(blocksAndStatus.filter(({ uploaded }) => !uploaded));
+    const filteredBlocks = blocksAndStatus.filter(({ uploaded }) => !uploaded);
+    return filteredBlocks;
+}
 
+async function uploadBlocks(account, blocks, options = DEFAULT_OPTIONS) {
+    const { log, statusCallback } = options;
+
+    const batches = splitOnBatches(blocks);
     let totalBlocks = batches.reduce((a, b) => a + b.length, 0);
     let currentBlocks = 0;
     for (let batch of batches) {
@@ -107,12 +119,15 @@ async function uploadCAR(account, carBuffer, options = DEFAULT_OPTIONS) {
 
         currentBlocks += batch.length;
         log(`Uploaded ${currentBlocks} / ${totalBlocks} blocks to NEARFS`);
+        statusCallback({ currentBlocks, totalBlocks });
     }
 }
 
 module.exports = {
     isAlreadyUploaded,
+    blocksToUpload,
     uploadBlock,
+    uploadBlocks,
     uploadCAR,
 }
 
