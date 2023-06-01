@@ -128,6 +128,7 @@ async function uploadBlocks(account, blocks, options = DEFAULT_OPTIONS) {
 module.exports = {
     isAlreadyUploaded,
     blocksToUpload,
+    splitOnBatches,
     uploadBlock,
     uploadBlocks,
     uploadCAR,
