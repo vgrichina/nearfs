@@ -2,6 +2,7 @@
   "name": "nearfs",
   "version": "0.3.2",
   "description": "NEARFS is a distributed file system compatible with IPFS that uses the NEAR blockchain as a backend.",
+  "keywords": ["ipfs", "blockchain", "web3", "web4", "nearprotocol"],
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
