@@ -8,6 +8,7 @@
     "test": "tape test/*.test.js | tap-diff",
     "coverage": "npx nyc npm run test && npx nyc report --reporter=lcov"
   },
+  "repository": "github:vgrichina/nearfs",
   "keywords": [],
   "author": "",
   "license": "ISC",
