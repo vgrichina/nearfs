@@ -6,6 +6,7 @@ const cors = require('@koa/cors');
 
 const multibase = require('multibase');
 const assert = require('assert');
+const { Readable, PassThrough } = require('stream');
 const mime = require('mime-types');
 const { Magic, MAGIC_MIME } = require('mmmagic');
 const isHtml = require('is-html');
@@ -21,15 +22,32 @@ const serveFile = async ctx => {
     const expectDirectory = ctx.path.endsWith('/');
     const { fileData, node, cid } = await getFile(rootCid, path, { useIndexHTML: expectDirectory });
     if (fileData) {
+        console.log('fileData', fileData);
+
+        const readable1 = fileData.pipe(new PassThrough());
+        const readable2 = fileData.pipe(new PassThrough());
+
+        const LOOKAHEAD_SIZE = 1024; // NOTE: Adjust highWaterMark in PassThrough to be at least this size
+        const fileHeaderChunks = [];
+        for await (const chunk of readable1) {
+            fileHeaderChunks.push(chunk);
+
+            if (fileHeaderChunks.reduce((acc, chunk) => acc + chunk.length, 0) >= LOOKAHEAD_SIZE) {
+                readable1.destroy();
+                break;
+            }
+        }
+        const fileHeader = Buffer.concat(fileHeaderChunks);
+
         if (ctx.query.filename) {
             ctx.type = mime.lookup(ctx.query.filename);
             ctx.attachment(ctx.query.filename, { type: 'inline' });
         } else if (path.includes('.')) {
             ctx.type = mime.lookup(path);
         } else {
-            const detected = await new Promise((resolve, reject) => magic.detect(fileData, (err, result) => err ? reject(err) : resolve(result)));
+            const detected = await new Promise((resolve, reject) => magic.detect(fileHeader, (err, result) => err ? reject(err) : resolve(result)));
             ctx.type = detected;
-            if (detected.startsWith('text/') && isHtml(fileData.toString('utf8'))) {
+            if (detected.startsWith('text/') && isHtml(fileHeader.toString('utf8'))) {
                 ctx.type = 'text/html';
             }
         }
@@ -40,7 +58,7 @@ const serveFile = async ctx => {
         // Return CID-based Etag like IPFS gateways
         ctx.set('Etag', `W/"${cidToString(cid)}"`);
 
-        ctx.body = fileData;
+        ctx.body = readable2;
         return;
     }
 
@@ -92,7 +110,7 @@ const getFile = async (cid, path, { useIndexHTML } = { }) => {
 
     if (codec === CODEC_RAW) {
         assert(!path, 'CID points to a file');
-        return { fileData: blockData, cid, codec };
+        return { fileData: Readable.from(blockData), cid, codec };
     } else if (codec === CODEC_DAG_PB) {
         const node = readPBNode(blockData);
 
@@ -109,19 +127,29 @@ const getFile = async (cid, path, { useIndexHTML } = { }) => {
         }
 
         if (node.data && node.links.length === 0) {
-            return { fileData: readUnixFSData(node.data).data, cid, codec };
+            const inlineData = readUnixFSData(node.data).data;
+            return { fileData: Readable.from(inlineData), cid, codec };
         }
 
         // if all links empty, this is just file split into chunks
         if (node.links.every(link => link.name === '')) {
-            const chunks = await Promise.all(node.links.map(async link => {
+            const childStreamPromises = node.links.map(async link => { 
                 const { fileData, cid } = await getFile(link.cid);
                 if (!fileData) {
                     throw new Error(`Chunk ${cidToString(link.cid)} not found`);
                 }
                 return fileData;
-            }));
-            return { fileData: Buffer.concat(chunks), cid, codec };
+            });
+
+            const fileData = Readable.from((async function *concatStreams() {
+                for (const streamPromise of childStreamPromises) {
+                    for await (const chunk of await streamPromise) {
+                        yield chunk;
+                    }
+                }
+            })());
+
+            return { fileData, cid, codec };
         }
 
         if (useIndexHTML) {
