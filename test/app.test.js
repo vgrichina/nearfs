@@ -1,5 +1,7 @@
 const test = require('tape');
 
+const http = require('http');
+const { Writable } = require('stream');
 const fs = require('fs').promises;
 const { readCAR, readBlock } = require('fast-ipfs');
 
@@ -51,6 +53,52 @@ test('/ipfs/:cid/:path big.car', async t => {
 test('/ipfs/:cid/:path big.car range', async t => {
     // TODO: Range support
 });
+
+test('/ipfs/:cid/:path very-big.car', async t => {
+    // This test is accessing 200MB file and should fail without streaming
+    await loadCar('test/data/very-big.car');
+
+    const stream = new Writable();
+    const bodyChunks = [];
+    stream._write = (chunk, encoding, callback) => {
+        bodyChunks.push(chunk);
+        callback();
+    };
+
+    const { statusCode } = await pipeGet(t, { path: '/ipfs/bafybeiehvmncxih5sugl5bkgnkramghsqpylxr6jngvlqrez46a2ojme4m/big-car/large.dat', stream });
+    t.isEqual(statusCode, 200);
+
+    const body = Buffer.concat(bodyChunks);
+    const ZERO_RANGE_SIZE = 100 * 1024 * 1024;
+    const PREFIX = 'prefix\n';
+    const SUFFIX = 'suffix\n';
+    const MID = 'mid\n';
+    t.isEqual(body.length, 2 * ZERO_RANGE_SIZE + PREFIX.length + SUFFIX.length + MID.length);
+    t.isEqual(body.subarray(0, PREFIX.length).toString(), PREFIX);
+    t.isEqual(body.subarray(ZERO_RANGE_SIZE + PREFIX.length, ZERO_RANGE_SIZE + PREFIX.length + MID.length).toString(), MID);
+    t.isEqual(body.subarray(-SUFFIX.length).toString(), SUFFIX);
+    t.true(body.subarray(PREFIX.length, ZERO_RANGE_SIZE + PREFIX.length).every(b => b === 0, 'range is all zeros'));
+    t.true(body.subarray(PREFIX.length + ZERO_RANGE_SIZE + MID.length, -SUFFIX.length).every(b => b === 0, 'range is all zeros'));
+});
+
+// NOTE: This is needed as supertest doesn't stop server properly when piping
+function pipeGet(t, { path, stream }) {
+    const server = http.createServer(app.callback()).listen(0);
+    t.teardown(() => server.close());
+    return responsePromise = new Promise((resolve) => {
+        http.request({
+            hostname: 'localhost',
+            port: server.address().port,
+            path,
+            method: 'GET',
+        }, (res) => {
+            res.on('end', () => resolve(res));
+            res.pipe(stream);
+        })
+            .on('error', (error) => t.fail(`request error: ${error}`))
+            .end();
+    });
+}
 
 test('/ipfs/:cid/:path littlelink.car not found', async t => {
     await loadCar('test/data/littlelink.car');

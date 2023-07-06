@@ -79,7 +79,7 @@ const serveFile = async ctx => {
     ctx.body = 'Not found';
 }
 
-const getFile = async (cid, path, { useIndexHTML }) => {
+const getFile = async (cid, path, { useIndexHTML } = { }) => {
     console.log('getFile', cidToString(cid), path);
     // TODO: Cache ?
     const { codec, hash } = readCID(cid);
@@ -94,7 +94,6 @@ const getFile = async (cid, path, { useIndexHTML }) => {
         assert(!path, 'CID points to a file');
         return { fileData: blockData, cid, codec };
     } else if (codec === CODEC_DAG_PB) {
-        const blockData = await storage.readBlock(hash);
         const node = readPBNode(blockData);
 
         if (path) {
@@ -115,7 +114,13 @@ const getFile = async (cid, path, { useIndexHTML }) => {
 
         // if all links empty, this is just file split into chunks
         if (node.links.every(link => link.name === '')) {
-            const chunks = await Promise.all(node.links.map(link => storage.readBlock(readCID(link.cid).hash)));
+            const chunks = await Promise.all(node.links.map(async link => {
+                const { fileData, cid } = await getFile(link.cid);
+                if (!fileData) {
+                    throw new Error(`Chunk ${cidToString(link.cid)} not found`);
+                }
+                return fileData;
+            }));
             return { fileData: Buffer.concat(chunks), cid, codec };
         }
 
