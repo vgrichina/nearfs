@@ -44,9 +44,10 @@ test('/ipfs/:cid/:path hello.car not found', async t => {
 test('/ipfs/:cid/:path big.car', async t => {
     await loadCar('test/data/big.car');
 
-    const { status, body } = await request.get('/ipfs/bafybeiaietzjdt4rsu2mk6qfymye5bgockic43pwsfm25lchld5wrj5gjq/big/file');
+    const { status, body, headers } = await request.get('/ipfs/bafybeiaietzjdt4rsu2mk6qfymye5bgockic43pwsfm25lchld5wrj5gjq/big/file');
     t.isEqual(status, 200);
     t.isEqual(body.length, 1024 * 1024);
+    t.isEqual(headers['content-length'], `${1024 * 1024}`);
     t.true(body.every(b => b === 0, 'body is all zeros'));
 });
 
@@ -65,7 +66,7 @@ test('/ipfs/:cid/:path very-big.car', async t => {
         callback();
     };
 
-    const { statusCode } = await pipeGet(t, { path: '/ipfs/bafybeiehvmncxih5sugl5bkgnkramghsqpylxr6jngvlqrez46a2ojme4m/big-car/large.dat', stream });
+    const { statusCode, headers } = await pipeGet(t, { path: '/ipfs/bafybeiehvmncxih5sugl5bkgnkramghsqpylxr6jngvlqrez46a2ojme4m/big-car/large.dat', stream });
     t.isEqual(statusCode, 200);
 
     const body = Buffer.concat(bodyChunks);
@@ -73,7 +74,9 @@ test('/ipfs/:cid/:path very-big.car', async t => {
     const PREFIX = 'prefix\n';
     const SUFFIX = 'suffix\n';
     const MID = 'mid\n';
-    t.isEqual(body.length, 2 * ZERO_RANGE_SIZE + PREFIX.length + SUFFIX.length + MID.length);
+    const TOTAL_SIZE = 2 * ZERO_RANGE_SIZE + PREFIX.length + SUFFIX.length + MID.length;
+    t.isEqual(body.length, TOTAL_SIZE);
+    t.isEqual(headers['content-length'], `${TOTAL_SIZE}`);
     t.isEqual(body.subarray(0, PREFIX.length).toString(), PREFIX);
     t.isEqual(body.subarray(ZERO_RANGE_SIZE + PREFIX.length, ZERO_RANGE_SIZE + PREFIX.length + MID.length).toString(), MID);
     t.isEqual(body.subarray(-SUFFIX.length).toString(), SUFFIX);

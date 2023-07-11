@@ -20,20 +20,18 @@ const serveFile = async ctx => {
     const rootCid = Buffer.from(multibase.decode(ctx.params.cid));
     const path = ctx.params.path || '';
     const expectDirectory = ctx.path.endsWith('/');
-    const { fileData, node, cid } = await getFile(rootCid, path, { useIndexHTML: expectDirectory });
+    const { fileData, node, cid, size } = await getFile(rootCid, path, { useIndexHTML: expectDirectory });
     if (fileData) {
-        console.log('fileData', fileData);
-
-        const readable1 = fileData.pipe(new PassThrough());
-        const readable2 = fileData.pipe(new PassThrough());
+        const lookaheadReadable = fileData.pipe(new PassThrough());
+        const mainReadable = fileData.pipe(new PassThrough());
 
         const LOOKAHEAD_SIZE = 1024; // NOTE: Adjust highWaterMark in PassThrough to be at least this size
         const fileHeaderChunks = [];
-        for await (const chunk of readable1) {
+        for await (const chunk of lookaheadReadable) {
             fileHeaderChunks.push(chunk);
 
             if (fileHeaderChunks.reduce((acc, chunk) => acc + chunk.length, 0) >= LOOKAHEAD_SIZE) {
-                readable1.destroy();
+                lookaheadReadable.destroy();
                 break;
             }
         }
@@ -58,7 +56,11 @@ const serveFile = async ctx => {
         // Return CID-based Etag like IPFS gateways
         ctx.set('Etag', `W/"${cidToString(cid)}"`);
 
-        ctx.body = readable2;
+        if (size) {
+            console.log('Setting content length', size);
+            ctx.length = size;
+        }
+        ctx.body = mainReadable;
         return;
     }
 
@@ -98,7 +100,8 @@ const serveFile = async ctx => {
 }
 
 const getFile = async (cid, path, { useIndexHTML } = { }) => {
-    console.log('getFile', cidToString(cid), path);
+    const cidStr = cidToString(cid);
+    console.log('getFile', cidStr, path);
     // TODO: Cache ?
     const { codec, hash } = readCID(cid);
 
@@ -110,7 +113,7 @@ const getFile = async (cid, path, { useIndexHTML } = { }) => {
 
     if (codec === CODEC_RAW) {
         assert(!path, 'CID points to a file');
-        return { fileData: Readable.from(blockData), cid, codec };
+        return { fileData: Readable.from(blockData), cid, codec, size: blockData.length };
     } else if (codec === CODEC_DAG_PB) {
         const node = readPBNode(blockData);
 
@@ -123,40 +126,52 @@ const getFile = async (cid, path, { useIndexHTML } = { }) => {
                 return {};
             }
 
-            return await getFile(link.cid, pathParts.slice(1).join('/'), { useIndexHTML });
+            pathParts.shift();
+            return await getFile(link.cid, pathParts.join('/'), { useIndexHTML });
         }
 
         if (node.data && node.links.length === 0) {
             const inlineData = readUnixFSData(node.data).data;
-            return { fileData: Readable.from(inlineData), cid, codec };
+            return { fileData: Readable.from(inlineData), cid, codec, size: inlineData.length };
         }
 
         // if all links empty, this is just file split into chunks
         if (node.links.every(link => link.name === '')) {
-            const childStreamPromises = node.links.map(async link => { 
-                const { fileData, cid } = await getFile(link.cid);
-                if (!fileData) {
-                    throw new Error(`Chunk ${cidToString(link.cid)} not found`);
+            const childFilePromises = [];
+            const childFileSizes = [];
+            for (const link of node.links) {
+                const { codec } = readCID(link.cid);
+                const filePromiseThunk = () => getFile(link.cid);
+                childFilePromises.push(filePromiseThunk);
+                if (codec === CODEC_RAW) {
+                    childFileSizes.push(link.size);
+                } else {
+                    const { size } = await filePromiseThunk();
+                    if (!size) {
+                        throw new Error(`Unkown file size: ${cidStr} ${path || ''} ${cidToString(link.cid)}`);
+                    }
+                    childFileSizes.push(size);
                 }
-                return fileData;
-            });
+            }
 
             const fileData = Readable.from((async function *concatStreams() {
-                for (const streamPromise of childStreamPromises) {
-                    for await (const chunk of await streamPromise) {
+                for (const filePromiseThunk of childFilePromises) {
+                    const { fileData } = await filePromiseThunk();
+                    for await (const chunk of fileData) {
                         yield chunk;
                     }
                 }
             })());
 
-            return { fileData, cid, codec };
+            return { fileData, cid, codec, size: childFileSizes.reduce((a, b) => a + b, 0) };
         }
 
         if (useIndexHTML) {
             const link = node.links.find(link => link.name === 'index.html');
 
             if (link) {
-                return await getFile(link.cid, '', { useIndexHTML: false });
+                // TODO: Correct file size
+                return {...await getFile(link.cid, '', { useIndexHTML: false }), size: link.size };
             }
         }
 
