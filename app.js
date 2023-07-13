@@ -6,15 +6,12 @@ const cors = require('@koa/cors');
 
 const multibase = require('multibase');
 const assert = require('assert');
-const { Readable, PassThrough } = require('stream');
+const { Readable } = require('stream');
 const mime = require('mime-types');
-const { Magic, MAGIC_MIME } = require('mmmagic');
-const isHtml = require('is-html');
+const { fileTypeStream } = require('./src/util/file-type');
 
 const { readPBNode, cidToString, readCID, CODEC_RAW, CODEC_DAG_PB, readUnixFSData } = require('fast-ipfs');
 const storage = require('./src/storage');
-
-const magic = new Magic(MAGIC_MIME);
 
 const serveFile = async ctx => {
     const rootCid = Buffer.from(multibase.decode(ctx.params.cid));
@@ -22,20 +19,7 @@ const serveFile = async ctx => {
     const expectDirectory = ctx.path.endsWith('/');
     const { fileData, node, cid, size } = await getFile(rootCid, path, { useIndexHTML: expectDirectory });
     if (fileData) {
-        const lookaheadReadable = fileData.pipe(new PassThrough());
-        const mainReadable = fileData.pipe(new PassThrough());
-
-        const LOOKAHEAD_SIZE = 1024; // NOTE: Adjust highWaterMark in PassThrough to be at least this size
-        const fileHeaderChunks = [];
-        for await (const chunk of lookaheadReadable) {
-            fileHeaderChunks.push(chunk);
-
-            if (fileHeaderChunks.reduce((acc, chunk) => acc + chunk.length, 0) >= LOOKAHEAD_SIZE) {
-                lookaheadReadable.destroy();
-                break;
-            }
-        }
-        const fileHeader = Buffer.concat(fileHeaderChunks);
+        const mainReadable = await fileTypeStream(fileData);
 
         if (ctx.query.filename) {
             ctx.type = mime.lookup(ctx.query.filename);
@@ -43,11 +27,7 @@ const serveFile = async ctx => {
         } else if (path.includes('.')) {
             ctx.type = mime.lookup(path);
         } else {
-            const detected = await new Promise((resolve, reject) => magic.detect(fileHeader, (err, result) => err ? reject(err) : resolve(result)));
-            ctx.type = detected;
-            if (detected.startsWith('text/') && isHtml(fileHeader.toString('utf8'))) {
-                ctx.type = 'text/html';
-            }
+            ctx.type = mainReadable.fileType.mime;
         }
 
         // Set cache control header to indicate that resource never expires
