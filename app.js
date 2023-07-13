@@ -137,33 +137,34 @@ const getFile = async (cid, path, { useIndexHTML } = { }) => {
 
         // if all links empty, this is just file split into chunks
         if (node.links.every(link => link.name === '')) {
-            const childFilePromises = [];
-            const childFileSizes = [];
+            const parts = [];
+            let totalSize = 0;
             for (const link of node.links) {
                 const { codec } = readCID(link.cid);
-                const filePromiseThunk = () => getFile(link.cid);
-                childFilePromises.push(filePromiseThunk);
                 if (codec === CODEC_RAW) {
-                    childFileSizes.push(link.size);
+                    totalSize += link.size;
+                    parts.push(link);
                 } else {
-                    const { size } = await filePromiseThunk();
+                    const file = await getFile(link.cid);
+                    parts.push(file);
+                    const { size } = file;
                     if (!size) {
                         throw new Error(`Unkown file size: ${cidStr} ${path || ''} ${cidToString(link.cid)}`);
                     }
-                    childFileSizes.push(size);
+                    totalSize += size;
                 }
             }
 
             const fileData = Readable.from((async function *concatStreams() {
-                for (const filePromiseThunk of childFilePromises) {
-                    const { fileData } = await filePromiseThunk();
-                    for await (const chunk of fileData) {
+                for (const linkOrFile of parts) {
+                    const file = linkOrFile.fileData ? linkOrFile : await getFile(linkOrFile.cid);
+                    for await (const chunk of file.fileData) {
                         yield chunk;
                     }
                 }
             })());
 
-            return { fileData, cid, codec, size: childFileSizes.reduce((a, b) => a + b, 0) };
+            return { fileData, cid, codec, size: totalSize };
         }
 
         if (useIndexHTML) {
