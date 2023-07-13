@@ -111,8 +111,17 @@ const getFile = async (cid, path, { useIndexHTML } = { }) => {
         }
 
         if (node.data && node.links.length === 0) {
-            const inlineData = readUnixFSData(node.data).data;
-            return { fileData: Readable.from(inlineData), cid, codec, size: inlineData.length };
+            const { type, data, fileSize } = readUnixFSData(node.data);
+            switch (type) {
+                case 1:
+                    // Directory (empty given that there are no links)
+                    return { node, cid, codec };
+                case 2:
+                    // File
+                    return { fileData: Readable.from(data), cid, codec, size: data.length };
+                default:
+                    throw new Error(`Unknown UnixFS data type: ${type}`);
+            }
         }
 
         // if all links empty, this is just file split into chunks

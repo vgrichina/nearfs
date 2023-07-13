@@ -51,6 +51,26 @@ test('/ipfs/:cid/:path big.car', async t => {
     t.true(body.every(b => b === 0, 'body is all zeros'));
 });
 
+test('/ipfs/:cid/:path big.car nil directory', async t => {
+    await loadCar('test/data/big.car');
+
+    const { status, text } = await request.get('/ipfs/bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354/');
+    t.isEqual(status, 200);
+    t.isEqual(flattenHtml(text), flattenHtml(`
+        <html>
+            <head>
+                <title>Index of /ipfs/bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354/</title>
+            </head>
+            <body>
+                <h1>Index of /ipfs/bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354/</h1>
+                <ul>
+
+                </ul>
+            </body>
+        </html>
+    `));
+});
+
 test('/ipfs/:cid/:path big.car range', async t => {
     // TODO: Range support
 });
