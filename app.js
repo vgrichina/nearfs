@@ -110,68 +110,44 @@ const getFile = async (cid, path, { useIndexHTML } = { }) => {
             return await getFile(link.cid, pathParts.join('/'), { useIndexHTML });
         }
 
-        if (node.data && node.links.length === 0) {
-            const { type, data, fileSize } = readUnixFSData(node.data);
-            switch (type) {
-                case 1:
-                    // Directory (empty given that there are no links)
-                    return { node, cid, codec };
-                case 2:
-                    // File
+        assert(node.data, `DAG node ${cidStr} has no UnixFS data`);
+        const { type, data, fileSize } = readUnixFSData(node.data);
+        switch (type) {
+            case 1:
+                // Directory
+                if (useIndexHTML) {
+                    const link = node.links.find(link => link.name === 'index.html');
+
+                    if (link) {
+                        return await getFile(link.cid, '', { useIndexHTML: false });
+                    }
+                }
+
+                // CID points to a directory without index.html (or useIndexHTML is false)
+                return { node, cid, codec };
+            case 2:
+                // File
+                if (!node.links || node.links.length === 0) {
                     return { fileData: Readable.from(data), cid, codec, size: data.length };
-                default:
-                    throw new Error(`Unknown UnixFS data type: ${type}`);
-            }
-        }
-
-        // if all links empty, this is just file split into chunks
-        if (node.links.every(link => link.name === '')) {
-            const parts = [];
-            let totalSize = 0;
-            for (const link of node.links) {
-                const { codec } = readCID(link.cid);
-                if (codec === CODEC_RAW) {
-                    totalSize += link.size;
-                    parts.push(link);
-                } else {
-                    const file = await getFile(link.cid);
-                    parts.push(file);
-                    const { size } = file;
-                    if (!size) {
-                        throw new Error(`Unkown file size: ${cidStr} ${path || ''} ${cidToString(link.cid)}`);
-                    }
-                    totalSize += size;
                 }
-            }
 
-            const fileData = Readable.from((async function *concatStreams() {
-                for (const linkOrFile of parts) {
-                    const file = linkOrFile.fileData ? linkOrFile : await getFile(linkOrFile.cid);
-                    for await (const chunk of file.fileData) {
-                        yield chunk;
+                const fileData = Readable.from((async function* concatStreams() {
+                    for (const link of node.links) {
+                        const { fileData } = await getFile(link.cid);
+                        for await (const chunk of fileData) {
+                            yield chunk;
+                        }
                     }
-                }
-            })());
+                })());
 
-            return { fileData, cid, codec, size: totalSize };
+                return { fileData, cid, codec, size: fileSize };
+
+            default:
+                throw new Error(`Unknown UnixFS data type: ${type}`);
         }
-
-        if (useIndexHTML) {
-            const link = node.links.find(link => link.name === 'index.html');
-
-            if (link) {
-                // TODO: Correct file size
-                return {...await getFile(link.cid, '', { useIndexHTML: false }), size: link.size };
-            }
-        }
-
-        // CID points to a directory without index.html (or useIndexHTML is false)
-        return { node, cid, codec };
     } else {
         throw new Error(`Unsupported codec: 0x${codec.toString(16)} `);
     }
-
-    throw new Error('Shouldn\'t go here');
 };
 
 router.get('/', async ctx => {
