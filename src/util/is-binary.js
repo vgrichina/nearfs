@@ -94,10 +94,6 @@ function isBinary(fileBuffer) {
         return true;
     }
 
-    if (suspiciousBytes > 1 && isBinaryProto(fileBuffer, totalBytes)) {
-        return true;
-    }
-
     return false;
 }
 
