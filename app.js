@@ -19,14 +19,14 @@ const serveFile = async ctx => {
     const expectDirectory = ctx.path.endsWith('/');
     const { fileData, node, cid, size } = await getFile(rootCid, path, { useIndexHTML: expectDirectory });
     if (fileData) {
-        const mainReadable = await fileTypeStream(fileData);
-
+        let mainReadable = fileData;
         if (ctx.query.filename) {
             ctx.type = mime.lookup(ctx.query.filename);
             ctx.attachment(ctx.query.filename, { type: 'inline' });
         } else if (path.includes('.')) {
             ctx.type = mime.lookup(path);
         } else {
+            mainReadable = await fileTypeStream(fileData);
             ctx.type = mainReadable.fileType.mime;
         }
 
