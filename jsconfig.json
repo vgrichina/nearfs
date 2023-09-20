@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "http2": ["./http2-shim.js"]
+    }
+  }
+}
+
