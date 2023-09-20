@@ -91,13 +91,12 @@ async function loadStream(options) {
     } = options;
 
     const defaultStartBlockHeight = parseInt(process.env.NEARFS_DEFAULT_START_BLOCK_HEIGHT || '0');
-    const latestBlockHeight = await storage.readLatestBlockHeight();
 
     const { fromEnv } = require("@aws-sdk/credential-providers");
     let blocksProcessed = 0;
     for await (let streamerMessage of stream({
         credentials: fromEnv(),
-        startBlockHeight: startBlockHeight || latestBlockHeight || defaultStartBlockHeight,
+        startBlockHeight: startBlockHeight || await storage.readLatestBlockHeight() || defaultStartBlockHeight,
         s3BucketName: bucketName || "near-lake-data-mainnet",
         s3RegionName: regionName || "eu-central-1",
         s3Endpoint: endpoint,
