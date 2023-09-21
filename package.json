@@ -2,7 +2,13 @@
   "name": "nearfs",
   "version": "0.3.2",
   "description": "NEARFS is a distributed file system compatible with IPFS that uses the NEAR blockchain as a backend.",
-  "keywords": ["ipfs", "blockchain", "web3", "web4", "nearprotocol"],
+  "keywords": [
+    "ipfs",
+    "blockchain",
+    "web3",
+    "web4",
+    "nearprotocol"
+  ],
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -25,7 +31,7 @@
     "meow": "^9.0.0",
     "mime-types": "^2.1.35",
     "minimatch": "^5.1.1",
-    "minio": "^7.0.32",
+    "minio": "^7.1.3",
     "multibase": "^4.0.6",
     "near-api-js": "^0.45.1",
     "near-lake-framework": "^1.0.6",
