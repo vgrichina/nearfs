@@ -10,9 +10,13 @@ let timeStarted = Date.now();
 async function handleStreamerMessage(streamerMessage, options = {}) {
     const { height: blockHeight, timestamp } = streamerMessage.block.header;
     totalMessages++;
+    const speed = totalMessages * 1000 / (Date.now() - timeStarted);
+    const lagSeconds = (Date.now() - (timestamp / 1000000)) / 1000;
+    const estimatedSyncSeconds = lagSeconds / speed;
     console.log(new Date(), `Block #${blockHeight} Shards: ${streamerMessage.shards.length}`,
-        `Speed: ${totalMessages * 1000 / (Date.now() - timeStarted)} blocks/second`,
-        `Lag: ${Date.now() - (timestamp / 1000000)} ms`);
+        `Speed: ${speed.toFixed(2)} blocks/second`,
+        `Lag: ${lagSeconds.toFixed(2)} seconds`,
+        `Fully synced in: ${estimatedSyncSeconds.toFixed(2)} seconds`);
 
     const pipeline = [
         dumpBlockReceipts,
