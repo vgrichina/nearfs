@@ -7,7 +7,9 @@ NEARFS is a distributed file system compatible with IPFS that uses the NEAR bloc
 - IPFS blocks are recorded in transaction history as `fs_store` function calls
 - custom indexer can be used to collect all blocks and store them in a local file system (see `scripts/load-from-near-lake.js`)
 - IPFS-compatible gateway can be used to access files (see `app.js`)
-- Public gateway is available at https://ipfs.web4.near.page. It provides access to data stored on NEAR mainnet.
+- Public gateways are available:
+  - https://ipfs.web4.near.page. Access data stored on NEAR mainnet.
+  - https://ipfs.web4.testnet.page. Access data stored on NEAR testnet.
 
 ## Useful tools
 
