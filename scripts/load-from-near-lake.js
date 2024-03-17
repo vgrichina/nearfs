@@ -1,13 +1,14 @@
-const { stream } = require('near-lake-framework');
 const minimatch = require('minimatch');
 
 const storage = require('../src/storage');
 const { computeHash } = require('../src/util/hash');
+const { blockStream } = require('../src/util/near-lake');
 
 let totalMessages = 0;
 let timeStarted = Date.now();
 
 async function handleStreamerMessage(streamerMessage, options = {}) {
+    console.log('handleStreamerMessage.size', JSON.stringify(streamerMessage).length);
     const { height: blockHeight, timestamp } = streamerMessage.block.header;
     totalMessages++;
     const speed = totalMessages * 1000 / (Date.now() - timeStarted);
@@ -54,11 +55,11 @@ async function dumpBlockReceipts(streamerMessage, { include, exclude }) {
         if (!chunk) {
             continue;
         }
-        for (let { predecessorId, receipt, receiptId, receiverId } of chunk.receipts) {
-            if (include && include.find(pattern => !minimatch(accountId, pattern))) {
+        for (let { receipt, receiver_id } of chunk.receipts) {
+            if (include && include.find(pattern => !minimatch(receiver_id, pattern))) {
                 return;
             }
-            if (exclude && exclude.find(pattern => minimatch(accountId, pattern))) {
+            if (exclude && exclude.find(pattern => minimatch(receiver_id, pattern))) {
                 return;
             }
 
@@ -66,7 +67,7 @@ async function dumpBlockReceipts(streamerMessage, { include, exclude }) {
                 for (let action of receipt.Action.actions) {
                     const [, actionArgs] = parseRustEnum(action);
 
-                    if (actionArgs.methodName === 'fs_store') {
+                    if (actionArgs.method_name === 'fs_store') {
                         const data = Buffer.from(actionArgs.args, 'base64');
                         try {
                             const hash = await computeHash(data);
@@ -98,13 +99,12 @@ async function loadStream(options) {
 
     const { fromEnv } = require("@aws-sdk/credential-providers");
     let blocksProcessed = 0;
-    for await (let streamerMessage of stream({
-        credentials: fromEnv(),
-        startBlockHeight: startBlockHeight || await storage.readLatestBlockHeight() || defaultStartBlockHeight,
-        s3BucketName: bucketName || "near-lake-data-mainnet",
-        s3RegionName: regionName || "eu-central-1",
-        s3Endpoint: endpoint,
-        blocksPreloadPoolSize: batchSize
+    for await (let streamerMessage of blockStream({
+        startAfter: startBlockHeight || await storage.readLatestBlockHeight() || defaultStartBlockHeight, // TODO: -1?
+        bucketName: bucketName || "near-lake-data-mainnet",
+        region: regionName || "eu-central-1",
+        endpoint,
+        pageSize: batchSize
     })) {
         await handleStreamerMessage(streamerMessage, {
             batchSize,
