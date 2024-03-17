@@ -85,14 +85,26 @@ async function* blockStream({ bucketName, region, endpoint, startAfter, limit, p
     }
 
     try {
+        const workPool = [];
+
         for await (const blockNumber of blockNumbersStream(client, bucketName, startAfter, limit, pageSize)) {
-            const block = JSON.parse((await getFile('block.json', blockNumber)).data.toString());
-            const result = { block, shards: [] };
-            for (let shard = 0; shard < block.chunks.length; shard++) {
-                const chunk =  JSON.parse((await getFile(`shard_${shard}.json`, blockNumber)).data.toString());
-                result.shards.push( chunk );
+            if (workPool.length >= pageSize) {
+                yield await workPool.shift();
             }
-            yield result;
+
+            workPool.push((async () => {
+                const block = JSON.parse((await getFile('block.json', blockNumber)).data.toString());
+                const result = { block, shards: [] };
+                for (let shard = 0; shard < block.chunks.length; shard++) {
+                    const chunk =  JSON.parse((await getFile(`shard_${shard}.json`, blockNumber)).data.toString());
+                    result.shards.push( chunk );
+                }
+                return result;
+            })());
+        }
+
+        for (const work of workPool) {
+            yield await work;
         }
     } finally {
         client.destroy();
