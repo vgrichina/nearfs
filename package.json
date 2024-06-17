@@ -18,6 +18,7 @@
   "repository": "github:vgrichina/nearfs",
   "author": "",
   "license": "ISC",
+  "engines": { "node": ">=16.0" },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.535.0",
     "@aws-sdk/credential-providers": "^3.231.0",

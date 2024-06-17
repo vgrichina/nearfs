@@ -97,7 +97,6 @@ async function loadStream(options) {
 
     const defaultStartBlockHeight = parseInt(process.env.NEARFS_DEFAULT_START_BLOCK_HEIGHT || '0');
 
-    const { fromEnv } = require("@aws-sdk/credential-providers");
     let blocksProcessed = 0;
     for await (let streamerMessage of blockStream({
         startAfter: startBlockHeight || await storage.readLatestBlockHeight() || defaultStartBlockHeight, // TODO: -1?
