@@ -175,7 +175,6 @@ const handleSubdomain = async (ctx, next) => {
             await serveFile(ctx);
         } catch (error) {
             // If it's not a valid CID, continue to the next middleware
-            console.error('Invalid CID in subdomain:', error);
             await next();
         }
     } else {
