@@ -160,11 +160,35 @@ router.get('/', async ctx => {
 router.get('/ipfs/:cid/:path(.+)', serveFile);
 router.get('/ipfs/:cid', serveFile);
 
+const handleSubdomain = async (ctx, next) => {
+    const hostname = ctx.hostname;
+    const parts = hostname.split('.');
+    if (parts.length > 2) {
+        const subdomain = parts[0];
+        try {
+            // Check if the subdomain is a valid CID
+            const cid = multibase.decode(subdomain);
+            // Set the params to be used by serveFile
+            ctx.params = ctx.params || {};
+            ctx.params.cid = subdomain;
+            ctx.params.path = ctx.path.slice(1); // Remove leading slash
+            await serveFile(ctx);
+        } catch (error) {
+            // If it's not a valid CID, continue to the next middleware
+            console.error('Invalid CID in subdomain:', error);
+            await next();
+        }
+    } else {
+        await next();
+    }
+};
+
 app
     .use(async (ctx, next) => {
         console.log(ctx.method, ctx.path);
         await next();
     })
+    .use(handleSubdomain)
     .use(cors({ credentials: true }))
     .use(router.routes())
     .use(router.allowedMethods());

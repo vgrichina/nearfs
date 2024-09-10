@@ -16,6 +16,37 @@ test('/', async t => {
     t.match(text, /vgrichina\/nearfs/);
 });
 
+test('handleSubdomain middleware serves content for valid CID subdomains', async t => {
+    await loadCar('test/data/hello.car');
+
+    const { status, text } = await request
+        .get('/')
+        .set('Host', 'bafybeicit72w2sl3agal2jftpkrzwd773fjgdk4dym7pq2pbojyif72v5e.example.com');
+
+    t.isEqual(status, 200);
+    t.isEqual(text, 'Hello, World\n');
+});
+
+test('handleSubdomain middleware ignores invalid CID subdomains', async t => {
+    const { status, text } = await request
+        .get('/')
+        .set('Host', 'invalid-cid.example.com');
+
+    t.isEqual(status, 200);
+    t.match(text, /vgrichina\/nearfs/);
+});
+
+test('handleSubdomain middleware serves content for valid CID subdomains with path', async t => {
+    await loadCar('test/data/littlelink.car');
+
+    const { status, headers } = await request
+        .get('/css/normalize.css')
+        .set('Host', 'bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm.example.com');
+
+    t.isEqual(status, 200);
+    t.isEqual(headers['content-type'], 'text/css; charset=utf-8');
+});
+
 test('/ipfs/:cid not found', async t => {
     const { status } = await request.get('/ipfs/bafkreib3mbbrhmal34xx7loxzxc4ue36y5rg7wvc24xwryg2j2ozek3p4y');
     t.isEqual(status, 404);
