@@ -80,3 +80,25 @@ https://ipfs.web4.near.page/ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erj
 **Example index.html**:
 
 https://ipfs.web4.near.page/ipfs/bafybeidg3ohf4kscsf6cjbgg7vttcvu7q4olena3kwhpl5wl3trhhougyi/dist/
+
+## Subdomain Support
+
+NEARFS now supports accessing content via subdomains. This allows to serve full websites via NEARFS gateway with isolated security context.
+
+### How it works
+
+- The gateway checks if the hostname contains a subdomain.
+- If the subdomain is a valid CID, it serves the content associated with that CID.
+- The path after the domain is treated as the path within the IPFS directory structure.
+
+### Examples
+
+You can access IPFS content using subdomains like this:
+
+- `http://bafybeicit72w2sl3agal2jftpkrzwd773fjgdk4dym7pq2pbojyif72v5e.ipfs.web4.near.page/`
+  This serves the content of the root directory for the given CID.
+
+- `http://bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm.ipfs.web4.near.page/privacy.html`
+  This serves the `privacy.html` file within the directory structure of the given CID.
+
+This feature provides a more intuitive way to share and access IPFS content through the NEARFS gateway.
