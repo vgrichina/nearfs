@@ -84,16 +84,16 @@ async function processBlockReceipts(streamerMessage, { include, exclude }) {
 async function loadStream(options) {
     const {
         startBlockHeight,
-        bucketName,
-        regionName,
-        endpoint,
         batchSize,
         limit,
+        updateBlockHeight,
         include,
         exclude,
-        updateBlockHeight,
         source,
+        ...otherOptions
     } = options;
+
+    console.log('otherOptions', otherOptions);
 
     const { readBlocks } = require(`fast-near/source/${source}`);
 
@@ -104,16 +104,16 @@ async function loadStream(options) {
     
     for await (let streamerMessage of readBlocks({
         startBlockHeight: start,
-        s3BucketName: bucketName || "near-lake-data-mainnet",
-        s3RegionName: regionName || "eu-central-1",
-        s3Endpoint: endpoint,
+        endBlockHeight: limit ? start + limit : undefined,
+        batchSize,
+        ...otherOptions
     })) {
         await withTimeCounter('handleStreamerMessage', async () => {
             await handleStreamerMessage(streamerMessage, {
                 batchSize,
+                updateBlockHeight,
                 include,
                 exclude,
-                updateBlockHeight,
             });
         });
 
