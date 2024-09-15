@@ -3731,10 +3731,10 @@ fast-ipfs@^0.2.0:
   dependencies:
     multibase "^4.0.6"
 
-fast-near@^0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/fast-near/-/fast-near-0.5.1.tgz#95c24ce06dc396fc9be0f1c88adb0ef5787759c7"
-  integrity sha512-N0K9V+gfr6zzBvUzT5MMp+8yR5utUxjE2cCt3L0bfnC1CSL+7qwUEMijvj9kdi8q2duZISzzikwBps8XBSsYag==
+fast-near@^0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/fast-near/-/fast-near-0.5.2.tgz#12e0423a48896357daa008bff31cb187b11882ac"
+  integrity sha512-C6bWzEQFolwlrtLNrIXzccLNvHUo9UI+5w0Lbmc2WycjhPN22/e3viD3AviZEp05F4TpDiThkyJfkY/NW7HGpw==
   dependencies:
     "@aws-sdk/credential-providers" "^3.535.0"
     "@koa/cors" "^3.1.0"
