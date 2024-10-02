@@ -58,7 +58,8 @@ const serveFile = async ctx => {
         // TODO: What should be Cache-Control
         // Return CID-based Etag like IPFS gateways
         ctx.set('Etag', `W/"${cidToString(cid)}"`);
-        const ipfsPath = `/ipfs/${cidToString(rootCid)}/${path || ''}`;
+        const ipfsPath = `/ipfs/${cidToString(rootCid)}/${path}`;
+        const basePath = (ctx.usingSubdomain ? '/' : `/ipfs/${cidToString(rootCid)}/`) + path;
         ctx.body = `
             <html>
                 <head>
@@ -67,7 +68,7 @@ const serveFile = async ctx => {
                 <body>
                     <h1>Index of ${ipfsPath}</h1>
                     <ul>
-                        ${node.links.map(link => `<li><a href="${ipfsPath}${link.name}">${link.name}</a></li>`).join('\n')}
+                        ${node.links.map(link => `<li><a href="${basePath}${link.name}">${link.name}</a></li>`).join('\n')}
                     </ul>
                 </body>
             </html>
@@ -172,6 +173,7 @@ const handleSubdomain = async (ctx, next) => {
             ctx.params = ctx.params || {};
             ctx.params.cid = subdomain;
             ctx.params.path = ctx.path.slice(1); // Remove leading slash
+            ctx.usingSubdomain = true;
             await serveFile(ctx);
         } catch (error) {
             // If it's not a valid CID, continue to the next middleware
