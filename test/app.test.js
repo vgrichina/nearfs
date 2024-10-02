@@ -253,6 +253,59 @@ test('/ipfs/:cid/:path web4.car serve css and detect mime from extension', async
     t.match(headers['content-type'], /^text\/css/);
 });
 
+test('handleSubdomain middleware serves directory listing for valid CID subdomains', async t => {
+    await loadCar('test/data/littlelink.car');
+
+    const { status, text } = await request
+        .get('/')
+        .set('Host', 'bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm.example.com');
+
+    t.isEqual(status, 200);
+    t.isEqual(flattenHtml(text), flattenHtml(`
+        <html>
+            <head>
+                <title>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/</title>
+            </head>
+            <body>
+                <h1>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/</h1>
+                <ul>
+                    <li><a href="/css">css</a></li>
+                    <li><a href="/deploy.js">deploy.js</a></li>
+                    <li><a href="/images">images</a></li>
+                    <li><a href="/privacy.html">privacy.html</a></li>
+                    <li><a href="/web-wallet-api.js">web-wallet-api.js</a></li>
+                </ul>
+            </body>
+        </html>
+    `));
+});
+
+test('handleSubdomain middleware serves nested directory listing for valid CID subdomains', async t => {
+    await loadCar('test/data/littlelink.car');
+
+    const { status, text } = await request
+        .get('/images/')
+        .set('Host', 'bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm.example.com');
+
+    t.isEqual(status, 200);
+    t.isEqual(flattenHtml(text), flattenHtml(`
+        <html>
+            <head>
+                <title>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/</title>
+            </head>
+            <body>
+                <h1>Index of /ipfs/bafybeiepywlzwr2yzyin2bo7k2v5oi37lsgleyvfrf6erjvlze2qec6wkm/images/</h1>
+                <ul>
+                    <li><a href="/images/avatar.png">avatar.png</a></li>
+                    <li><a href="/images/avatar.svg">avatar.svg</a></li>
+                    <li><a href="/images/avatar@2x.png">avatar@2x.png</a></li>
+                    <li><a href="/images/icons">icons</a></li>
+                </ul>
+            </body>
+        </html>
+    `));
+});
+
 async function loadCar(carFile) {
     const carData = await fs.readFile(carFile);
     const [, ...rawBlocks] = await readCAR(carData);
