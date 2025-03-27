@@ -2119,10 +2119,10 @@ fast-ipfs@^0.2.0:
   dependencies:
     multibase "^4.0.6"
 
-fast-near@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/fast-near/-/fast-near-0.6.0.tgz#4c4fa39688149b3a80b4b25bb96b57d256557afc"
-  integrity sha512-Fgh2o6n2KbeKNMCfrRy1UIsL7wfG8aGixE2n9oC9kFI9IR+PCa34CHUpj5l9yhl9UWSP/TXzeX/TPKoNz0p9BA==
+fast-near@^0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/fast-near/-/fast-near-0.6.1.tgz#d14f5115542c4a949fc7de443f8d83cf58a24fc7"
+  integrity sha512-vw/JsmiPkEaKJF9ofE3w4Lf8cVj1buVwwo+MBmb2jzA9TPZ/Xf1rCMSH+mZ30sEdLvD053jMfToHGi0ULGJe5w==
   dependencies:
     "@aws-sdk/credential-providers" "^3.535.0"
     "@koa/cors" "^3.1.0"
