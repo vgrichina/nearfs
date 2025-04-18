@@ -29,6 +29,7 @@ async function handleStreamerMessage(streamerMessage, options = {}) {
 
     if (options.updateBlockHeight) {
         await storage.writeLatestBlockHeight(blockHeight);
+        await storage.writeLatestBlockTimestamp(timestamp);
     }
 }
 

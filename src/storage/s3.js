@@ -77,10 +77,26 @@ async function readLatestBlockHeight() {
     }
 }
 
+async function writeLatestBlockTimestamp(timestamp) {
+    await minio.putObject(STORAGE_S3_BUCKET_NAME, 'latest_block_timestamp', timestamp.toString());
+}
+
+async function getLatestBlockTimestamp() {
+    try {
+        const readableStream = await minio.getObject(STORAGE_S3_BUCKET_NAME, 'latest_block_timestamp');
+        const buffer = await streamToBuffer(readableStream);
+        return parseInt(buffer.toString('utf8'));
+    } catch (e) {
+        return 0;
+    }
+}
+
 module.exports = {
     init,
     writeBlock,
     readBlock,
     writeLatestBlockHeight,
     readLatestBlockHeight,
+    writeLatestBlockTimestamp,
+    getLatestBlockTimestamp,
 };

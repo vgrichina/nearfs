@@ -158,6 +158,19 @@ router.get('/', async ctx => {
     `;
 });
 
+const MAX_BLOCK_LAG_TIME_MS = 60_000;
+router.get('/healthz', async ctx => {
+    const latestBlockHeight = await storage.readLatestBlockHeight();
+    const latestBlockTimestamp = await storage.getLatestBlockTimestamp();
+
+    // NOTE: node considered unhealthy if it's out of sync
+    if (!latestBlockHeight || !latestBlockTimestamp || Date.now() - latestBlockTimestamp > MAX_BLOCK_LAG_TIME_MS) {
+        ctx.throw(500, 'unhealthy (out of sync)');
+    }
+
+    ctx.status = 204; // No Content
+});
+
 router.get('/ipfs/:cid/:path(.+)', serveFile);
 router.get('/ipfs/:cid', serveFile);
 

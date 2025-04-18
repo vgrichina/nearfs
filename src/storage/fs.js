@@ -42,10 +42,24 @@ async function readLatestBlockHeight() {
     return parseInt(await fs.readFile(`${STORAGE_PATH}/latest_block_height`, 'utf8').catch(() => '0'));
 }
 
+async function writeLatestBlockTimestamp(timestamp) {
+    await fs.writeFile(`${STORAGE_PATH}/latest_block_timestamp`, timestamp.toString());
+}
+
+async function getLatestBlockTimestamp() {
+    try {
+        return parseInt(await fs.readFile(`${STORAGE_PATH}/latest_block_timestamp`, 'utf8'));
+    } catch (e) {
+        return 0;
+    }
+}
+
 module.exports = {
     init,
     writeBlock,
     readBlock,
     writeLatestBlockHeight,
     readLatestBlockHeight,
+    writeLatestBlockTimestamp,
+    getLatestBlockTimestamp,
 };
