@@ -49,11 +49,11 @@ function parseRustEnum(enumObj) {
 async function processBlockReceipts(streamerMessage, { include, exclude }) {
     console.time('processBlockReceipts');
     for (let shard of streamerMessage.shards) {
-        let { chunk } = shard;
-        if (!chunk) {
-            continue;
-        }
-        for (let { receipt, receiver_id } of chunk.receipts) {
+        // Process receipt_execution_outcomes which contains all executed receipts
+        // (including self-calls that don't appear in chunk.receipts)
+        for (let { receipt: receiptWithId } of shard.receipt_execution_outcomes || []) {
+            const { receipt, receiver_id } = receiptWithId;
+
             if (include && include.find(pattern => !minimatch(receiver_id, pattern))) {
                 continue;
             }
